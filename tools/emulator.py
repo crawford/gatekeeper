@@ -1,3 +1,8 @@
+#!/usr/bin/python
+
+from sys import argv
+from select import select
+
 C_QUERY = 'Q'
 C_RESPONSE = 'R'
 C_LOCK = 'L'
@@ -9,7 +14,12 @@ C_STATUS = 'S'
 C_IBUTTON = 'I'
 C_ERROR = 'E'
 
-P_INVALID = '1'
+P_INVALID = chr(1)
+P_TIMEOUT = chr(2)
+
+TERMINATOR = '\n'
+MAX_PAYLOAD_LEN = 50
+
 
 
 def cmd_unknown(id, payload):
@@ -20,19 +30,13 @@ def cmd_query(id, payload):
 	send_message(C_RESPONSE, id, locked and 'L' or 'U')
 
 def cmd_lock(id, payload):
-	global locked
-	locked = True
-	print 'Locking door'
+	lock_door()
 
 def cmd_unlock(id, payload):
-	global locked
-	locked = False
-	print 'Unlocking door'
+	unlock_door()
 
 def cmd_pop(id, payload):
-	global locked
-	locked = True
-	print 'Popping door'
+	pop_door()
 
 def cmd_clear(id, payload):
 	access_list = []
@@ -43,7 +47,7 @@ def cmd_add(id, payload):
 	print access_list
 
 def cmd_status(id, payload):
-	print 'Showing status -', payload
+	show_status(payload)
 
 def cmd_ibutton(id, payload):
 	print 'Ignoring command (iButton)'
@@ -66,17 +70,25 @@ MSG_COMMANDS = {C_QUERY:    cmd_query,
 				C_IBUTTON:  cmd_ibutton,
 				C_ERROR:    cmd_error}
 
-MAX_PAYLOAD_LEN = 50
 
-msgbuf = '';
-locked = True
-access_list = []
 
+def read_message(message):
+	global msgbuf
+	msgbuf += message
+
+	while TERMINATOR in msgbuf:
+		msg = msgbuf[:msgbuf.find(TERMINATOR)]
+		msgbuf = msgbuf[msgbuf.find(TERMINATOR) + 1:]
+		if len(msg):
+			parse_message(msg)
+		else:
+			send_message(C_ERROR, 0, P_INVALID)
 
 
 def parse_message(message):
 	cmd = MSG_COMMANDS.get(message[0], cmd_unknown)
 	m_id = message[1]
+	m_id = 1
 	m_payload = message[2:]
 	cmd(m_id, m_payload)
 
@@ -84,29 +96,89 @@ def send_message(command, id, payload):
 	if len(command) != 1:
 		raise(ValueError('Invalid command'))
 
-	#if int(id) < 0 or id > 255:
-	#	raise(ValueError('Invalid id'))
+	if id < 0 or id > 255:
+		raise(ValueError('Invalid id'))
 
 	if len(payload) > MAX_PAYLOAD_LEN:
 		raise(ValueError('Payload too large'))
 
-	print 'Sending message -', command + id + payload
+	print 'Sending message -', command + str(id) + payload
+
+def read_ibutton(id):
+	global msgid
+	send_message(C_IBUTTON, msgid, id)
+	print 'Waiting for response from server...'
+	#Actually check
+	msgid += 1
+	print 'Response timed out. Failing to local access list'
+	show_status(P_TIMEOUT)
+	if id in access_list:
+		pop_door()
+
+def show_status(code):
+	print 'Showing status -', code
+
+def unlock_door():
+	global locked
+	locked = False
+	print 'Unlocking door'
+
+def lock_door():
+	global locked
+	locked = True
+	print 'Locking door'
+
+def pop_door():
+	global locked
+	locked = True
+	print 'Popping door'
 
 
-parse_message('Qa')
-parse_message('Ub')
-parse_message('Qc')
-parse_message('Ld')
-parse_message('Qe')
-parse_message('Pf')
-parse_message('Qg')
-parse_message('Sh4')
-parse_message('Ii01234567')
-parse_message('Ej3')
-parse_message('RkP')
-parse_message('ZlP')
-parse_message('0mlsdf')
-parse_message('AnAlex')
-parse_message('AoSean')
-parse_message('Cp')
+def __main__():
+	if len(argv) != 2:
+		print 'Usage:', argv[0], 'fifo_name'
+		quit()
 
+	device = open(argv[1], 'r+')
+
+	while True:
+		(r,w,x) = select([device], [], [], 5)
+		if len(r):
+			msg = device.readline()
+			read_message(msg)
+
+
+
+
+msgbuf = ''
+msgid = 1
+locked = True
+access_list = []
+
+__main__()
+
+#parse_message('Q\x01')
+#parse_message('U\x02')
+#parse_message('Q\x03')
+#parse_message('L\x04')
+#parse_message('Q\x05')
+#parse_message('P\x06')
+#parse_message('Q\x07')
+#parse_message('S\x084')
+#parse_message('I\x0901234567')
+#parse_message('E\x0A3')
+#parse_message('R\x0BP')
+#parse_message('Z\x0CP')
+#parse_message('0\x0Dlsdf')
+#parse_message('A\x0EAlex')
+#parse_message('A\x0FSean')
+#parse_message('C\x10')
+#
+#read_ibutton('bob')
+#parse_message('A\x11bob')
+#read_ibutton('bob')
+
+#read_message('A');
+#read_message('\x0F');
+#read_message('Sea');
+#read_message('n\nQ\x01\n');
