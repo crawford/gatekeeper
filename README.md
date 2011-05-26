@@ -48,18 +48,21 @@ Terminator: \n (newline)
 +---------+-------------+----------------------------------------------------+  
 |    Q    |     N/A     | Queries the state of the door. Will return         |  
 |         |             |  L (locked) or U (unlocked).                       |  
-|    R    |  Response   | Sends a response.                                  |  
-|    L    |     N/A     | Locks the door.                                    |  
-|    U    |     N/A     | Unlocks the door.                                  |  
+|    R    |dID/Response | Sends the door ID and the response.                |  
+|    L    |     N/A     | Locks the door. Will return L (success).           |  
+|    U    |     N/A     | Unlocks the door. Will return U (success).         |  
 |    P    |     N/A     | Unlocks the door, pauses, and then relocks the     |  
-|         |             |  door.                                             |  
-|    C    |     N/A     | Clears the local access list.                      |  
+|         |             |  door. Will return L (success).                    |  
+|    C    |     N/A     | Clears the local access list. Will return Y        |  
+|         |             |  (success).                                        |  
 |    A    | iButton(s)  | Comma-seperated list of iButton IDs to be appended |  
-|         |             |  to the local access list.                         |  
+|         |             |  to the local access list. Will return Y (success).|  
 |    S    | Status Code | Causes the door to flash the status code to the    |  
-|         |             |  user.                                             |  
+|         |             |  user. Will return Y (success).                    |  
 |    I    |   iButton   | Sends the iButton ID.                              |  
 |    E    | Error Code  | Sends an error code.                               |  
+|    D    |   Door ID   | Sets the door ID. This number is used in all       |  
+|         |             |  future communications. Will return Y (success).   |  
 +---------+-------------+----------------------------------------------------+  
 </tt>
 

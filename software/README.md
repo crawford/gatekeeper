@@ -37,3 +37,4 @@ the door:
 * querying the state
 * adding users to the local access list
 * removing users from the local access list
+* setting the door ID

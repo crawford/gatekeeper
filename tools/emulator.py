@@ -13,6 +13,7 @@ C_ADD = 'A'
 C_STATUS = 'S'
 C_IBUTTON = 'I'
 C_ERROR = 'E'
+C_DOOR = 'D'
 
 P_INVALID = chr(1)
 P_TIMEOUT = chr(2)
@@ -31,23 +32,37 @@ def cmd_query(id, payload):
 
 def cmd_lock(id, payload):
 	lock_door()
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 
 def cmd_unlock(id, payload):
 	unlock_door()
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 
 def cmd_pop(id, payload):
 	pop_door()
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 
 def cmd_clear(id, payload):
+	global access_list
 	access_list = []
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 	print access_list
 
 def cmd_add(id, payload):
+	global access_list
 	access_list.append(payload)
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 	print access_list
 
 def cmd_status(id, payload):
 	show_status(payload)
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 
 def cmd_ibutton(id, payload):
 	print 'Ignoring command (iButton)'
@@ -57,6 +72,12 @@ def cmd_response(id, payload):
 
 def cmd_error(id, payload):
 	print 'Ignoring command (Error)'
+
+def cmd_door(id, payload):
+	global dID
+	dID = payload
+	global dID
+	send_message(C_RESPONSE, id, chr(dID) + 'S')
 
 
 MSG_COMMANDS = {C_QUERY:    cmd_query,
@@ -68,7 +89,8 @@ MSG_COMMANDS = {C_QUERY:    cmd_query,
 				C_ADD:      cmd_add,
 				C_STATUS:   cmd_status,
 				C_IBUTTON:  cmd_ibutton,
-				C_ERROR:    cmd_error}
+				C_ERROR:    cmd_error,
+				C_DOOR:     cmd_door}
 
 
 
@@ -102,7 +124,7 @@ def send_message(command, id, payload):
 	if len(payload) > MAX_PAYLOAD_LEN:
 		raise(ValueError('Payload too large'))
 
-	print 'Sending message -', command + str(id) + payload
+	print 'Sending message -', command + chr(id) + payload
 
 def read_ibutton(id):
 	global msgid
@@ -154,6 +176,7 @@ msgbuf = ''
 msgid = 1
 locked = True
 access_list = []
+dID = 0
 
 __main__()
 
