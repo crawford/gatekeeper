@@ -1,5 +1,5 @@
-from select import select
 from Queue import Queue
+from select import select
 from threading import Thread, Timer
 
 class HardwareHelper(Thread):
@@ -41,14 +41,14 @@ class HardwareHelper(Thread):
 		self.response_callbacks = {}
 		self.door_states = {}
 
-	def run(self):
+	def __run(self):
 		# Monitor the hardware pipe for messages
 		self.running = True
 		while self.running:
 			(r,w,x) = select([self.pipe], [], [], self.PIPE_TIMEOUT)
 			if len(r):
 				msg = self.pipe.readline()
-				if msg[-1] == '\n':
+				if msg[-1] == self.TERMINATOR:
 					msg = msg[:-1]
 
 				# If its an iButton message, call the handler
@@ -79,51 +79,55 @@ class HardwareHelper(Thread):
 				# This shouldn't get called
 				print 'Received an invalid message (', msg, ')'
 
-	def stop(self):
+	def __stop(self):
 		self.running = False
 
-	def fetch_access_list(self, dID):
+	def __fetch_access_list(self, dID):
 		return {}
 
-	def update_al_add(self, dID, items):
+	def __update_al_add(self, dID, items):
 		pass
 	
-	def update_al_remove(self, dID, items):
+	def __update_al_remove(self, dID, items):
 		pass
 
-	def update_al_clear(self, dID, items):
+	def __update_al_clear(self, dID, items):
 		pass
 
-	def fetch_zID_for_dID(self, dID):
+	def __fetch_zID_for_dID(self, dID):
 		return 1
 
-	def send_message(self, dID, command, payload = ''):
+	def __send_message(self, dID, command, payload = ''):
 		id = self.msgID
 		self.msgID += 1
 		self.pipe.write(command + chr(id) + payload + self.TERMINATOR)
 		return id
 
-	def register_response_callback(self, key, callback, followup):
+	def __register_response_callback(self, key, callback, followup):
 		prev = self.response_callbacks.get(key)
 		if prev:
 			(p_callback,p_timer,followup) = prev
 			p_timer.cancel()
 			p_callback(self.R_CANCEL)
 
-		timer = Timer(self.RESPONSE_TIMEOUT, lambda:callback(self.R_TIMEOUT))
+		timer = Timer(self.RESPONSE_TIMEOUT, lambda:self.__handle_timeout(key, callback))
 		self.response_callbacks[key] = (callback,timer,followup)
 		timer.start()
-	
-	def state_followup(self, response, dID):
+
+	def __handle_timeout(self, key, callback):
+		del self.response_callbacks[key]
+		callback(self.R_TIMEOUT)
+
+	def __state_followup(self, response, dID):
 		if not response == self.R_CANCEL and not response == self.R_TIMEOUT:
 			self.door_states[dID] = response
 
-	def add_followup(self, response, dID, iButtons):
+	def __add_followup(self, response, dID, iButtons):
 		if response == self.C_SUCCESS:
 			#Save iButtons to the DB
 			pass
 
-	def remove_followup_1(self, response, dID, iButtons):
+	def __remove_followup_1(self, response, dID, iButtons, callback):
 		if response == self.C_SUCCESS:
 			#Calculate the new list of iButtons
 			ibutton_str = ''
@@ -132,16 +136,23 @@ class HardwareHelper(Thread):
 			followup = lambda r:self.remove_followup_2(r, dID, iButtons)
 			self.register_response_callback((dID, mID), callback, followup)
 
-	def remove_followup_2(self, response, dID, iButtons):
+	def __remove_followup_2(self, response, dID, iButtons):
 		if response == self.C_SUCCESS:
 			#Save iButtons to the DB
 			pass
 
-	def clear_followup(self, response, dID):
+	def __clear_followup(self, response, dID):
 		if response == self.C_SUCCESS:
 			#Clear the iButtons from the DB
 			pass
 
+	def __send_action(self, dID, command, callback):
+		followup = lambda r:self.state_followup(r, dID)
+		self.__send_and_register(dID, callback, followup, command)
+
+	def __send_and_register(self, dID, callback, followup, command, payload = None):
+		mID = self.send_message(dID, command)
+		self.register_response_callback((dID, mID), callback, followup)
 
 #==================#
 # Public Functions #
@@ -152,42 +163,29 @@ class HardwareHelper(Thread):
 		if state:
 			callback(state)
 		else:
-			mID = self.send_message(dID, self.C_QUERY)
-			followup = lambda r:self.state_followup(r, dID)
-			self.register_response_callback((dID, mID), callback, followup)
+			self.__send_action(dID, self.C_QUERY, callback)
 
 	def lock(self, dID, callback = None):
-		mID = self.send_message(dID, self.C_LOCK)
-		followup = lambda r:self.state_followup(r, dID)
-		self.register_response_callback((dID, mID), callback, followup)
-
+		self.__send_action(dID, self.C_LOCK, callback)
+	
 	def unlock(self, dID, callback = None):
-		mID = self.send_message(dID, self.C_UNLOCK)
-		followup = lambda r:self.state_followup(r, dID)
-		self.register_response_callback((dID, mID), callback, followup)
+		self.__send_action(dID, self.C_UNLOCK, callback)
+
+	def clear_al(self, dID, callback = None):
+		self.__send_action(dID, self.C_CLEAR, callback)
 
 	def pop(self, dID, callback = None):
-		mID = self.send_message(dID, self.C_POP)
-		followup = lambda r:self.state_followup(r, dID)
-		self.register_response_callback((dID, mID), callback, followup)
+		self.__send_action(dID, self.C_POP, callback)
 
 	def add_to_al(self, dID, iButtons, callback = None):
 		ibutton_str = ','.join(iButtons)
-		mID = self.send_message(dID, self.C_ADD, ibutton_str)
 		followup = lambda r:self.add_followup(r, dID, iButtons)
-		self.register_response_callback((dID, mID), callback, followup)
+		self.__send_and_register(dID, callback, followup, self.C_ADD, ibutton_str)
 
 	def remove_from_al(self, dID, iButtons, callback = None):
-		mID = self.send_message(dID, self.C_CLEAR)
-		followup = lambda r:self.remove_followup_1(r, dID, iButtons)
-		self.register_response_callback((dID, mID), None, followup)
-
-	def clear_al(self, dID, callback = None):
-		mID = self.send_message(dID, self.C_CLEAR)
-		followup = lambda r:self.clear_followup(r, dID)
-		self.register_response_callback((dID, mID), callback, followup)
+		followup = lambda r:self.remove_followup_1(r, dID, iButtons, callback)
+		self.__send_and_register(dID, None, followup, self.C_CLEAR)
 
 	def show_status(self, dID, status, callback = None):
-		mID = self.send_message(dID, self.C_STATUS, chr(status))
-		self.register_response_callback((dID, mID), callback, None)
+		self.__send_and_register(dID, None, None, self.C_STATUS)
 
