@@ -79,7 +79,7 @@ class HardwareHelper(Thread):
 				# This shouldn't get called
 				print 'Received an invalid message (', msg, ')'
 
-	def __stop(self):
+	def stop(self):
 		self.running = False
 
 	def __fetch_access_list(self, dID):
@@ -132,9 +132,9 @@ class HardwareHelper(Thread):
 			#Calculate the new list of iButtons
 			ibutton_str = ''
 			#Clear the values from the DB
-			mID = self.send_message(dID, self.C_ADD, ibutton_str)
+			mID = self.__send_message(dID, self.C_ADD, ibutton_str)
 			followup = lambda r:self.remove_followup_2(r, dID, iButtons)
-			self.register_response_callback((dID, mID), callback, followup)
+			self.__register_response_callback((dID, mID), callback, followup)
 
 	def __remove_followup_2(self, response, dID, iButtons):
 		if response == self.C_SUCCESS:
@@ -151,8 +151,8 @@ class HardwareHelper(Thread):
 		self.__send_and_register(dID, callback, followup, command)
 
 	def __send_and_register(self, dID, callback, followup, command, payload = None):
-		mID = self.send_message(dID, command)
-		self.register_response_callback((dID, mID), callback, followup)
+		mID = self.__send_message(dID, command)
+		self.__register_response_callback((dID, mID), callback, followup)
 
 #==================#
 # Public Functions #
