@@ -30,6 +30,7 @@ Hardware Helper
 Provides functionality for communicating with the actual door-locking
 hardware. This functionality consists of performing the following actions on
 the door:
+
 * locking
 * unlocking
 * popping

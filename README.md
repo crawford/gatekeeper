@@ -26,11 +26,11 @@ Protocol
 --------
 
 The message frame appears as follows:  
-<tt>  
+<pre>
 +---------+----+--------------------+------------+  
 | Command | ID | Payload (Optional) | Terminator |  
 +---------+----+--------------------+------------+  
-</tt>  
+</pre>  
 Terminator: \n (newline)  
   
 * The command specifies which operation needs to be performed.
@@ -42,7 +42,7 @@ Terminator: \n (newline)
   
   
 <b>Commands</b>  
-<tt>  
+<pre>
 +---------+-------------+----------------------------------------------------+  
 | Command | Payload     | Description                                        |  
 +---------+-------------+----------------------------------------------------+  
@@ -64,5 +64,5 @@ Terminator: \n (newline)
 |    D    |   Door ID   | Sets the door ID. This number is used in all       |  
 |         |             |  future communications. Will return Y (success).   |  
 +---------+-------------+----------------------------------------------------+  
-</tt>
+</pre>
 
