@@ -1,0 +1,6 @@
+server:
+  service_port     : 12345
+  service_interface: 0.0.0.0
+
+  control_port     : 12346
+  control_interface: localhost
