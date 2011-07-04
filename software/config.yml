@@ -1,6 +1,19 @@
-server:
-  service_port     : 12345
-  service_interface: 0.0.0.0
+servers:
+  control:
+    port     : 12346
+    interface: localhost
+  socket:
+    port     : 12345
+    interface: 0.0.0.0
+  websocket:
+    port     : 8080
+    interface: 0.0.0.0
+  http:
+    port     : 80
+    interface: 0.0.0.0
 
-  control_port     : 12346
-  control_interface: localhost
+database:
+  database: 
+  username: 
+  password: 
+  host    : 

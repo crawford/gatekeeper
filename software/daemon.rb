@@ -5,13 +5,10 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'rubygems'
 require 'eventmachine'
 require 'yaml'
-require 'api_server'
 require 'control_server'
 require 'http_server'
 require 'socket_server'
 require 'web_socket_server'
-#require 'hardware_interface'
-require 'zigbee_protocol'
 
 def main
 	config = keys_to_symbols(YAML.load_file('config.yml'))
@@ -46,10 +43,9 @@ end
 def keys_to_symbols(value)
 	return value if not value.is_a?(Hash)
 	hash = value.inject({}) do |hash,(k,v)|
-		hash[k.to_sym] = keys_to_symbols(v);
+		hash[k.to_sym] = keys_to_symbols(v)
 		hash
 	end
-	return hash
 end
 
 main
