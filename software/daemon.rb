@@ -4,21 +4,52 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 
 require 'rubygems'
 require 'eventmachine'
-require 'api_server'
-require 'api_server_controller'
 require 'yaml'
+require 'api_server'
+require 'control_server'
+require 'http_server'
+require 'socket_server'
+require 'web_socket_server'
+#require 'hardware_interface'
+require 'zigbee_protocol'
 
-CONFIG = YAML.load_file('config.yml')
+def main
+	config = keys_to_symbols(YAML.load_file('config.yml'))
 
-EM.kqueue
-EM.epoll
+	EM.kqueue
+	EM.epoll
 
-EM.run do
-	EM.start_server(CONFIG['server']['service_interface'],
-					CONFIG['server']['service_port'],
-					ApiServer)
+	servers = config[:servers]
+	EM.run do
+	EM.start_server(servers[:socket][:interface],
+	                servers[:socket][:port],
+	                Gatekeeper::SocketServer,
+	                servers[:socket].merge(:database => config[:database]))
 
-	EM.start_server(CONFIG['server']['control_interface'],
-					CONFIG['server']['control_port'],
-					ApiServerController)
+	EM.start_server(servers[:control][:interface],
+	                servers[:control][:port],
+	                Gatekeeper::ControlServer,
+	                servers[:control].merge(:database => config[:database]))
+
+	EM.start_server(servers[:websocket][:interface],
+	                servers[:websocket][:port],
+	                Gatekeeper::WebSocketServer,
+	                servers[:websocket].merge(:database => config[:database]))
+
+	EM.start_server(servers[:http][:interface],
+	                servers[:http][:port],
+	                Gatekeeper::HttpServer,
+	                servers[:http].merge(:database => config[:database]))
+	end
 end
+
+def keys_to_symbols(value)
+	return value if not value.is_a?(Hash)
+	hash = value.inject({}) do |hash,(k,v)|
+		hash[k.to_sym] = keys_to_symbols(v);
+		hash
+	end
+	return hash
+end
+
+main
