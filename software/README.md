@@ -15,13 +15,67 @@ allowed to preform the requested action.
 API Server
 ----------
 
+Functions:
 
-LDAP Helper
------------
+* get a list of all doors (id, name, status)
+* get status of a single door
+* pop a door
+* unlock a door
+* lock a door
+* authenticate user
+* add/remove ibutton from access list
 
 
-DB Helper
+Database
 ---------
+
+* Doors
+ * id
+ * hardware address - hardware address for the board (IP address, ZID, etc)
+ * interface id
+ * name
+ * state id
+ * message address - used for message passing
+
+* Users
+ * id
+ * username
+
+* Denials
+ * id
+ * user id
+ * door id
+ * start date
+ * end date
+
+* Interfaces
+ * id
+ * name (Ethernet, zigbee, etc)
+
+* States
+ * id
+ * name
+
+* Events
+ * id
+ * time
+ * user id
+ * type id
+ * action arg - (usually a door id)
+ * action id
+ * service id
+
+* Type
+ * id
+ * name (Violation, Access, etc)
+
+* Action
+ * id
+ * name (Pop, Unlock, etc)
+
+* Service
+ * service id
+ * name (Socket, HTTP, etc)
 
 
 Hardware Helper
