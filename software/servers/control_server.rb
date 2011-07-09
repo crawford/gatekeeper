@@ -1,7 +1,8 @@
-#TODO: super fast hack code
 module Gatekeeper
 	class ControlServer < EM::Connection
-		PROMPT = "\n> "
+		PROMPT      = "\n> "
+		CMD_STOP    = "stop"
+		MSG_UNKNOWN = "Unknown command"
 
 		def post_init
 			send_data PROMPT
@@ -9,8 +10,8 @@ module Gatekeeper
 
 		def receive_data(data)
 			case data.strip.downcase
-				when 'stop' then EM.stop
-				else send_data 'Unknown command'
+				when CMD_STOP then EM.stop
+				else send_data MSG_UNKNOWN
 			end
 			send_data PROMPT
 		end
