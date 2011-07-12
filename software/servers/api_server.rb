@@ -47,8 +47,13 @@ module Gatekeeper
 		# Open a connection to the Gatekeeper database and LDAP
 
 		def initialize(config)
-			@db = Mysql2::Client.new(config[:database])
-			@ldap = nil
+			begin
+				@db = Mysql2::Client.new(config[:database])
+				@ldap = nil
+				@last_error = nil
+			rescue Mysql2::Error => e
+				@last_error = e
+			end
 		end
 
 

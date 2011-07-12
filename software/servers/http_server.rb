@@ -14,7 +14,7 @@ module Gatekeeper
 				begin
 					parse_request(@parser.request_url)
 				rescue => e
-					send_data('Exception occured:' << e.to_s)
+					send_data('Exception occured: ' << e.to_s)
 					close_connection_after_writing
 					raise e
 				end
@@ -22,40 +22,45 @@ module Gatekeeper
 		end
 
 		def receive_data(data)
-			@parser << data
+			if @last_error.nil?
+				@parser << data
+			else
+				send_data('Exception occured: ' << @last_error.to_s)
+				close_connection_after_writing
+			end
 		end
 
 		def parse_request(uri)
 			uri = uri[1..-1].split('/')
+			uri[0] ||= 'index.html'
 			case uri[0]
+				when 'index.html'
+					File.open('views/index.html') do |page|
+						send_data(page.read)
+					end
 				when 'all_doors'
 					send_data(fetch_all_doors)
-					close_connection_after_writing
 				when 'door_state'
 					id = uri[1].to_i
 					res = fetch_door_state(id)
 					res ||= 'Invalid or missing ID'
 
 					send_data(res)
-					close_connection_after_writing
 				when 'unlock'
 					door = uri[1].to_i
 					user = parse_and_auth(uri[2..-1])
 					if user.nil?
 						send_data('Invalid parameters')
-						close_connection_after_writing
-						return
-					end
-
-					do_action(user, :unlock, door) do |result|
-						send_data(result)
-						close_connection_after_writing
+					else
+						do_action(user, :unlock, door) do |result|
+							send_data(result)
+						end
 					end
 				when 'favicon'
 				else
 					send_data('Unknown')
-					close_connection_after_writing
 			end
+			close_connection_after_writing
 		end
 
 		private
