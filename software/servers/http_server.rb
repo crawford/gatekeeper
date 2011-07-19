@@ -32,12 +32,12 @@ module Gatekeeper
 
 		def parse_request(uri)
 			uri = uri[1..-1].split('/')
-			uri[0] ||= 'index.html'
+			#uri[0] ||= 'index.html'
 			case uri[0]
-				when 'index.html'
-					File.open('views/index.html') do |page|
-						send_data(page.read)
-					end
+				#when 'index.html'
+				#	File.open('../site/views/index.html') do |page|
+				#		send_data(page.read)
+				#	end
 				when 'all_doors'
 					send_data(fetch_all_doors)
 				when 'door_state'
@@ -58,7 +58,7 @@ module Gatekeeper
 					end
 				when 'favicon'
 				else
-					send_data('Unknown')
+					send_data('Invalid Command')
 			end
 			close_connection_after_writing
 		end

@@ -1,4 +1,5 @@
 require 'mysql2'
+require 'json'
 require 'user'
 
 module Gatekeeper
@@ -64,7 +65,7 @@ module Gatekeeper
 		#  - Door State
 
 		def fetch_all_doors
-			query(FETCH_ALL_DOORS).each(:symbolize_keys => true)
+			query(FETCH_ALL_DOORS).each.to_json
 		end
 
 
