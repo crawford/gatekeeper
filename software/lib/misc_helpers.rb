@@ -6,6 +6,7 @@ def keys_to_symbols(value)
 	end
 end
 
+# Note - you must be in the correct folder in order for this function to work
 def add_to_loadpath(*paths)
 	curdir = Dir.pwd
 	paths.each do |path|

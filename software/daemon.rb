@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 
-$LOAD_PATH.unshift(File.dirname(__FILE__))
+Dir.chdir(File.dirname(__FILE__))
+$LOAD_PATH.unshift(".")
 
 require 'lib/misc_helpers'
 require 'rubygems'
