@@ -1,10 +1,12 @@
 #! /usr/bin/env ruby
 
-$LOAD_PATH.unshift(Dir.pwd)
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+
 require 'lib/misc_helpers'
 require 'rubygems'
 require 'eventmachine'
 require 'yaml'
+require 'daemons'
 
 add_to_loadpath("config", "servers", "lib", "models")
 
@@ -13,34 +15,37 @@ require 'http_server'
 require 'socket_server'
 require 'web_socket_server'
 
+
 def main
-	servers   = keys_to_symbols(YAML.load_file('config/servers.yml'))
-	databases = keys_to_symbols(YAML.load_file('config/database.yml'))
+  servers   = keys_to_symbols(YAML.load_file('config/servers.yml'))
+  databases = keys_to_symbols(YAML.load_file('config/database.yml'))
 
-	EM.kqueue
-	EM.epoll
+  EM.kqueue
+  EM.epoll
 
-	EM.run do
-	EM.start_server(servers[:socket][:interface],
-	                servers[:socket][:port],
-	                Gatekeeper::SocketServer,
-	                servers[:socket].merge(:database => databases))
+  Daemons.run_proc('gatekeeper', :dir_mode => :script, :multiple => false, :log_output => true) do
+    EM.run do
+      EM.start_server(servers[:socket][:interface],
+                      servers[:socket][:port],
+                      Gatekeeper::SocketServer,
+                      servers[:socket].merge(:database => databases))
 
-	EM.start_server(servers[:control][:interface],
-	                servers[:control][:port],
-	                Gatekeeper::ControlServer,
-	                servers[:control].merge(:database => databases))
+      EM.start_server(servers[:control][:interface],
+                      servers[:control][:port],
+                      Gatekeeper::ControlServer,
+                      servers[:control].merge(:database => databases))
 
-	EM.start_server(servers[:websocket][:interface],
-	                servers[:websocket][:port],
-	                Gatekeeper::WebSocketServer,
-	                servers[:websocket].merge(:database => databases))
+      EM.start_server(servers[:websocket][:interface],
+                      servers[:websocket][:port],
+                      Gatekeeper::WebSocketServer,
+                      servers[:websocket].merge(:database => databases))
 
-	EM.start_server(servers[:http][:interface],
-	                servers[:http][:port],
-	                Gatekeeper::HttpServer,
-	                servers[:http].merge(:database => databases))
-	end
+      EM.start_server(servers[:http][:interface],
+                      servers[:http][:port],
+                      Gatekeeper::HttpServer,
+                      servers[:http].merge(:database => databases))
+    end
+  end
 end
 
 main
