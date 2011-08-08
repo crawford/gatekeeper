@@ -1,6 +1,6 @@
 module Gatekeeper
-	class ZigbeeProtocol
-		def build_packet(address, message)
+	class ZigbeeInterface
+		def send_message(address, message)
 			'ZB: ' << address << message
 		end
 	end
