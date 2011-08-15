@@ -9,10 +9,6 @@ module Gatekeeper
 		USER_ACTIONS =  [:pop, :unlock, :lock]
 		ADMIN_ACTIONS = [:add_rule, :remove_rule, :add_ibutton, :remove_ibutton]
 
-		STATE = 'state'
-		COUNT = 'count'
-		ID =    'id'
-
 		FETCH_ALL_DOORS = '
 			SELECT doors.id, doors.name, states.name AS state
 			FROM doors, states
@@ -73,7 +69,7 @@ module Gatekeeper
 		# Returns the (symbolized) state of the door
 
 		def fetch_door_state(id)
-			result = fetch(STATE, FETCH_DOOR_STATUS, id)
+			result = fetch(:state, FETCH_DOOR_STATUS, id)
 			result.to_sym unless result.nil?
 		end
 
@@ -123,7 +119,7 @@ module Gatekeeper
 		def can_user_do?(user, action, arg)
 			if USER_ACTIONS.include?(action)
 				raise ArgumentError.new('arg must be a fixnum') unless arg.is_a?(Fixnum)
-				return fetch(COUNT, CAN_USER_PERFORM_ACTION, user.id, arg) == 0
+				return fetch(:count, CAN_USER_PERFORM_ACTION, user.id, arg) == 0
 			elsif ADMIN_ACTIONS.include?(action)
 				return user.admin
 			else
@@ -147,11 +143,11 @@ module Gatekeeper
 		# If the value doesn't exist, create it and return the id.
 
 		def get_id_or_create(table, value)
-			result = fetch(ID, GET_ID_BY_VALUE, table, value)
+			result = fetch(:id, GET_ID_BY_VALUE, table, value)
 			return result unless result.nil?
 
 			query(INSERT_VALUE, table, value)
-			fetch(ID, GET_ID_BY_VALUE, table, value)
+			fetch(:id, GET_ID_BY_VALUE, table, value)
 		end
 
 
@@ -159,9 +155,15 @@ module Gatekeeper
 		# attribute from the first result or nil if there are no results.
 
 		def fetch(attribute, query, *args)
-			results = query(query, *args)
+			results = db_query(query, *args)
 			return if results.size == 0
-			results.first[attribute]
+
+			out = []
+			results.each(:symbolize_keys => true) do |result|
+				out << result[attribute]
+			end
+			return out.first if out.size == 1
+			out
 		end
 
 
