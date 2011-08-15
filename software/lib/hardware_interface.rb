@@ -138,6 +138,8 @@ module Gatekeeper
 
 		private
 
+		# Builds and sends a message, and registers that fiber to the message
+
 		def send_and_register(fiber, dID, command, payload = '')
 			key = "#{dID},#{@msgid.to_s}"
 			register_fiber(fiber, key)
@@ -145,6 +147,8 @@ module Gatekeeper
 			send_message(dID, command, payload)
 		end
 
+
+		# Registers the fiber to the specified key (killing any old fibers)
 
 		def register_fiber(fiber, key)
 			old = @fibers[key]
@@ -159,6 +163,8 @@ module Gatekeeper
 
 		end
 
+
+		# Builds and sends a message to the specified dID
 
 		def send_message(dID, command, payload)
 			interface = get_interface_for_dID(dID)
