@@ -9,6 +9,7 @@ gem "http_parser.rb"
 gem "sinatra"
 gem "addressable", ">=2.1.1"
 gem "em-websocket"
+gem "sinatra"
 
 #Temporary
 gem "shotgun"
