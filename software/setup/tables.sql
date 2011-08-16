@@ -1,19 +1,9 @@
-DROP TABLE IF EXISTS `access_lists`;
-CREATE TABLE `access_lists` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `door_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `door_id` (`door_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
 DROP TABLE IF EXISTS `actions`;
 CREATE TABLE `actions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `denials`;
 CREATE TABLE `denials` (
@@ -25,7 +15,7 @@ CREATE TABLE `denials` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `door_id` (`door_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `doors`;
 CREATE TABLE `doors` (
@@ -38,7 +28,7 @@ CREATE TABLE `doors` (
   PRIMARY KEY (`id`),
   KEY `interface_id` (`interface_id`),
   KEY `state_id` (`state_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `events`;
 CREATE TABLE `events` (
@@ -61,7 +51,7 @@ CREATE TABLE `interfaces` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `services`;
 CREATE TABLE `services` (
@@ -75,7 +65,7 @@ CREATE TABLE `states` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `types`;
 CREATE TABLE `types` (
@@ -87,6 +77,6 @@ CREATE TABLE `types` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `uuid` varchar(36) DEFAULT NULL,
+  `username` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
