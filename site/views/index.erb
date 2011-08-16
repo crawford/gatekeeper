@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<title>Gatekeeper</title>
+		<style type="text/css" src="main.css"></style>
+	</head>
+	<body>
+		<div id="content">
+			<h1>Welcome to Gatekeeper</h1>
+			<div id="doors">
+				<table>
+					<% (1..3).each do %>
+					<tr>
+						<td>
+							Research Room
+						</td>
+						<td class="locked">
+							Locked
+						</td>
+						<td>
+							<button type="button">Unlock</button>
+						</td>
+						<td>
+							<button type="button">Pop</button>
+						</td>
+						<td>
+							<a href="/">Log</a>
+						</td>
+					</tr>
+					<% end %>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>
