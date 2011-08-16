@@ -8,7 +8,7 @@ module Gatekeeper
 		include ApiServer
 
 		def initialize(config)
-			super (config)
+			super(config)
 			@parser = Http::Parser.new
 			@parser.on_headers_complete = proc do
 				begin

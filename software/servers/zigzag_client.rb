@@ -1,18 +1,23 @@
-require 'hardware_interface'
-require 'event_machine'
+require 'eventmachine'
 
-class ZigzagClient
-	def initialize(config)
-		@hardware = HardwareInterface.instance
-	end
+module Gatekeeper
+	class ZigzagClient < EM::Connection
+		def initialize(config)
+			super(123)
 
-	def post_init
-	end
+			db = Mysql2::Client.new(config)
+			@hardware = HardwareInterface.instance
+			@hardware.setup(db)
+		end
 
-	def receive_data(data)
-	end
+		def post_init
+		end
 
-	def unbind
-		# We lost our connection to zigzag, sound the alarm
+		def receive_data(data)
+		end
+
+		def unbind
+			# We lost our connection to zigzag, sound the alarm
+		end
 	end
 end

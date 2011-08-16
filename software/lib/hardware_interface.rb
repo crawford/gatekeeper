@@ -38,13 +38,17 @@ module Gatekeeper
 		C_DOOR = 'D'
 
 
-		def initialize(db)
+		def initialize
 			@zigbee = ZigbeeInterface.new
 			@ethernet = nil
-			@db = db
 			@ldap = Ldap.new
+			@db = nil
 			@msgid = 0
 			@fibers = {}
+		end
+
+		def setup(db)
+			@db = db
 		end
 
 

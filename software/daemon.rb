@@ -15,6 +15,7 @@ require 'control_server'
 require 'http_server'
 require 'socket_server'
 require 'web_socket_server'
+require 'zigzag_client'
 
 
 def main
@@ -48,7 +49,7 @@ def main
 
 			EM.connect(servers[:zigzag][:host],
 			           servers[:zigzag][:port],
-			           ZigzagClient,
+			           Gatekeeper::ZigzagClient,
 			           servers[:zigzag])
 		end
 	end
