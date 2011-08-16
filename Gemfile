@@ -6,16 +6,7 @@ gem "eventmachine"
 gem "mysql2"
 gem "rake"
 gem "http_parser.rb"
+gem "sinatra"
 
-#bundler (1.0.15)
-#capistrano (2.6.0)
-#eventmachine (0.12.10)
-#highline (1.6.2)
-#http_parser.rb (0.5.1)
-#mysql2 (0.3.6)
-#net-scp (1.0.4)
-#net-sftp (2.0.5)
-#net-ssh (2.1.4)
-#net-ssh-gateway (1.1.0)
-#railsless-deploy (1.0.2)
-#rake (0.8.7)
+#Temporary
+gem "shotgun"
