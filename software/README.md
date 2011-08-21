@@ -100,13 +100,13 @@ WebSocket Interface
 
 <pre>
 +---------+--------------------+------------------+---------------------------------------+  
-| Command | Payload            | Server    Client | Description                           |  
+| Command | Payload            | Direction        | Description                           |  
 +---------+--------------------+------------------+---------------------------------------+  
-| AUTH    | Username, Password |        <-        | Auth user using username and password |  
-| LOCK    | Door ID            |        <-        | Lock a specific door                  |  
-| UNLOCK  | Door ID            |        <-        | Unlock a specific door                |  
-| POP     | Door ID            |        <-        | Pop a specific door                   |  
-| STATES  | All Door States    |        ->        | Returns a JSON string containing the  |  
+| AUTH    | Username, Password | Server to Client | Auth user using username and password |  
+| LOCK    | Door ID            | Server to Client | Lock a specific door                  |  
+| UNLOCK  | Door ID            | Server to Client | Unlock a specific door                |  
+| POP     | Door ID            | Server to Client | Pop a specific door                   |  
+| STATES  | All Door States    | Client to Server | Returns a JSON string containing the  |  
 |         |                    |                  |  states for all of the doors.         |  
 +---------+--------------------+------------------+---------------------------------------+  
 </pre>
