@@ -102,11 +102,11 @@ WebSocket Interface
 +---------+--------------------+-------------------+---------------------------------------+  
 | Command | Payload            | Server     Client | Description                           |  
 +---------+--------------------+-------------------+---------------------------------------+  
-| AUTH    | Username, Password |        <--        | Auth user using username and password |  
-| LOCK    | Door ID            |        <--        | Lock a specific door                  |  
-| UNLOCK  | Door ID            |        <--        | Unlock a specific door                |  
-| POP     | Door ID            |        <--        | Pop a specific door                   |  
-| STATES  | All Door States    |        -->        | Returns a JSON string containing the  |  
+| AUTH    | Username, Password |        <==        | Auth user using username and password |  
+| LOCK    | Door ID            |        <==        | Lock a specific door                  |  
+| UNLOCK  | Door ID            |        <==        | Unlock a specific door                |  
+| POP     | Door ID            |        <==        | Pop a specific door                   |  
+| STATES  | All Door States    |        ==>        | Returns a JSON string containing the  |  
 |         |                    |                   |  states for all of the doors.         |  
 +---------+--------------------+-------------------+---------------------------------------+  
 </pre>
