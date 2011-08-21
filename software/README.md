@@ -78,8 +78,8 @@ Database
  * name (Socket, HTTP, etc)
 
 
-Hardware Helper
----------------
+Hardware Interface
+------------------
 
 Provides functionality for communicating with the actual door-locking
 hardware. This functionality consists of performing the following actions on
@@ -93,3 +93,20 @@ the door:
 * adding users to the local access list
 * removing users from the local access list
 * setting the door ID
+
+
+WebSocket Interface
+-------------------
+
+<pre>
++---------+--------------------+-------------------+---------------------------------------+  
+| Command | Payload            | Server     Client | Description                           |  
++---------+--------------------+-------------------+---------------------------------------+  
+| AUTH    | Username, Password |        <--        | Auth user using username and password |  
+| LOCK    | Door ID            |        <--        | Lock a specific door                  |  
+| UNLOCK  | Door ID            |        <--        | Unlock a specific door                |  
+| POP     | Door ID            |        <--        | Pop a specific door                   |  
+| STATES  | All Door States    |        -->        | Returns a JSON string containing the  |  
+|         |                    |                   |  states for all of the doors.         |  
++---------+--------------------+-------------------+---------------------------------------+  
+</pre>

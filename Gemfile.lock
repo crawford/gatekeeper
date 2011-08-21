@@ -1,6 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    addressable (2.2.6)
     capistrano (2.6.0)
       highline
       net-scp (>= 1.0.0)
@@ -8,6 +9,9 @@ GEM
       net-ssh (>= 2.0.14)
       net-ssh-gateway (>= 1.1.0)
     daemons (1.1.4)
+    em-websocket (0.3.1)
+      addressable (>= 2.1.1)
+      eventmachine (>= 0.12.9)
     eventmachine (0.12.10)
     highline (1.6.2)
     http_parser.rb (0.5.1)
@@ -33,8 +37,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  addressable (>= 2.1.1)
   capistrano
   daemons
+  em-websocket
   eventmachine
   http_parser.rb
   mysql2

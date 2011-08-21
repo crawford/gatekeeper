@@ -37,20 +37,20 @@ def main
 			                Gatekeeper::ControlServer,
 			                servers[:control].merge(:database => databases))
 
-			EM.start_server(servers[:websocket][:interface],
-			                servers[:websocket][:port],
-			                Gatekeeper::WebSocketServer,
-			                servers[:websocket].merge(:database => databases))
-
 			EM.start_server(servers[:http][:interface],
 			                servers[:http][:port],
 			                Gatekeeper::HttpServer,
 			                servers[:http].merge(:database => databases))
 
-			EM.connect(servers[:zigzag][:host],
-			           servers[:zigzag][:port],
-			           Gatekeeper::ZigzagClient,
-			           servers[:zigzag])
+			EM.start_server(servers[:websocket][:interface],
+			                servers[:websocket][:port],
+			                Gatekeeper::WebSocketServer,
+			                servers[:websocket].merge(:database => databases))
+
+			#EM.connect(servers[:zigzag][:host],
+			#           servers[:zigzag][:port],
+			#           Gatekeeper::ZigzagClient,
+			#           servers[:zigzag])
 		end
 	end
 end
