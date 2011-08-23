@@ -33,11 +33,9 @@ CREATE TABLE `doors` (
   `hardware_address` varchar(255) NOT NULL,
   `interface_id` int(11) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
-  `state_id` int(11) NOT NULL,
   `message_address` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `interface_id` (`interface_id`),
-  KEY `state_id` (`state_id`)
+  KEY `interface_id` (`interface_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `events`;
@@ -67,13 +65,6 @@ DROP TABLE IF EXISTS `services`;
 CREATE TABLE `services` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-DROP TABLE IF EXISTS `states`;
-CREATE TABLE `states` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 

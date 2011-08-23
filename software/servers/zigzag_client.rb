@@ -5,7 +5,7 @@ module Gatekeeper
 		def initialize(config)
 			super(123)
 
-			db = Mysql2::Client.new(config)
+			db = Mysql2::Client.new(config[:database])
 			@hardware = HardwareInterface.instance
 			@hardware.setup(db)
 		end

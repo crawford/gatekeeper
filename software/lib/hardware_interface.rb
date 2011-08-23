@@ -1,6 +1,8 @@
 require 'mysql2'
 require 'singleton'
-#require 'message_process'
+require 'message_process'
+require 'zigbee_interface'
+require 'ldap'
 
 module Gatekeeper
 	class HardwareInterface
@@ -10,32 +12,32 @@ module Gatekeeper
 			SELECT interfaces.name AS interface
 			FROM doors, interfaces
 			WHERE doors.interface_id = interfaces.id AND doors.id = %d
-		'
+		'.freeze
 		FETCH_ACCESS_LIST_FOR_DID = '
 			SELECT users.id AS id
 			FROM access_lists, users
 			WHERE door_id = %d AND user_id = users.id
-		'
+		'.freeze
 		INSERT_INTO_ACCESS_LIST = '
 			INSERT INTO access_lists (user_id, door_id)
 			VALUES %s
-		'
+		'.freeze
 		CLEAR_ACCESS_LIST = '
 			DELETE FROM access_lists
 			WHERE door_id = %d
-		'
+		'.freeze
 
-		C_QUERY = 'Q'
-		C_RESPONSE = 'R'
-		C_LOCK = 'L'
-		C_UNLOCK = 'U'
-		C_POP = 'P'
-		C_CLEAR = 'C'
-		C_ADD = 'A'
-		C_STATUS = 'S'
-		C_IBUTTON = 'I'
-		C_ERROR = 'E'
-		C_DOOR = 'D'
+		C_QUERY = 'Q'.freeze
+		C_RESPONSE = 'R'.freeze
+		C_LOCK = 'L'.freeze
+		C_UNLOCK = 'U'.freeze
+		C_POP = 'P'.freeze
+		C_CLEAR = 'C'.freeze
+		C_ADD = 'A'.freeze
+		C_STATUS = 'S'.freeze
+		C_IBUTTON = 'I'.freeze
+		C_ERROR = 'E'.freeze
+		C_DOOR = 'D'.freeze
 
 
 		def initialize
@@ -175,7 +177,7 @@ module Gatekeeper
 
 		def send_message(dID, command, payload)
 			interface = get_interface_for_dID(dID)
-			msg = command << @msgid.to_s << payload << "\n"
+			msg = command + @msgid.to_s + payload.to_s + "\n"
 			@msgid += 1
 
 			puts "Sending message(#{msg}) to interface(#{interface})"

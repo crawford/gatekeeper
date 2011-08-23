@@ -2,8 +2,8 @@ require 'eventmachine'
 require 'fiber'
 
 class MessageProcess < Fiber
-	CANCELLED = 0
-	TIMEDOUT  = 1
+	CANCELLED = 0.freeze
+	TIMEDOUT  = 1.freeze
 
 	def callback=(callback)
 		@callback = callback
@@ -29,8 +29,8 @@ class MessageProcess < Fiber
 			start_timer
 		else
 			@timer.cancel
-			@callback.call(result)
-			@cleanup.call
+			@callback.call(result) if @callback
+			@cleanup.call if @cleanup
 		end
 	end
 

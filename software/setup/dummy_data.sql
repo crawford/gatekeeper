@@ -13,7 +13,3 @@ UNLOCK TABLES;
 LOCK TABLES `interfaces` WRITE;
 INSERT INTO `interfaces` VALUES (1,'zigbee'),(2,'ethernet');
 UNLOCK TABLES;
-
-LOCK TABLES `states` WRITE;
-INSERT INTO `states` VALUES (1,'unlocked'),(2,'locked');
-UNLOCK TABLES;

@@ -1,44 +1,39 @@
 require 'mysql2'
 require 'json'
 require 'user'
+require 'hardware_interface'
 
 module Gatekeeper
 	module ApiServer
 		include EM::Deferrable
 
-		USER_ACTIONS =  [:pop, :unlock, :lock]
-		ADMIN_ACTIONS = [:add_rule, :remove_rule, :add_ibutton, :remove_ibutton]
+		USER_ACTIONS =  [:pop, :unlock, :lock].freeze
+		ADMIN_ACTIONS = [:add_rule, :remove_rule, :add_ibutton, :remove_ibutton].freeze
 
 		FETCH_ALL_DOORS = '
-			SELECT doors.id, doors.name, states.name AS state
-			FROM doors, states
-			WHERE doors.state_id = states.id
-		'
-		FETCH_DOOR_STATUS = '
-			SELECT states.name AS state
-			FROM doors, states
-			WHERE doors.state_id = states.id AND doors.id = %d
-		'
+			SELECT doors.id, doors.name
+			FROM doors
+		'.freeze
 		CAN_USER_PERFORM_ACTION = '
 			SELECT COUNT(*) AS count
 			FROM denials
 			WHERE (start_date <= NOW() OR start_date IS NULL) AND
 			(end_date >= NOW() OR end_date IS NULL) AND
 			user_id = %d AND door_id = %d
-		'
+		'.freeze
 		GET_ID_BY_VALUE = '
 			SELECT id
 			FROM %s
 			WHERE name = "%s"
-		'
+		'.freeze
 		INSERT_VALUE = '
 			INSERT INTO %s
 			(name) VALUES ("%s")
-		'
+		'.freeze
 		LOG_EVENT = '
 			INSERT INTO events
-			(time, user_id, type_id, action_id, action_arg, service_id) VALUES (NOW(), %d, %d, %d, "%s", %d)
-		'
+			(time, user_id, type_id, action_id, action_did, action_arg, service_id) VALUES (NOW(), %d, %d, %d, %d, "%s", %d)
+		'.freeze
 
 
 		# Open a connection to the Gatekeeper database and LDAP
@@ -48,7 +43,17 @@ module Gatekeeper
 				@db = Mysql2::Client.new(config[:database])
 				@ldap = nil
 				@last_error = nil
+				@hardware = HardwareInterface.instance
+				@@states ||= nil
+				unless @@states
+					doors = fetch_all_doors
+					doors.each do |door|
+						#TODO: update the states here
+						p door
+					end
+				end
 			rescue Mysql2::Error => e
+				p e
 				@last_error = e
 			end
 		end
@@ -61,16 +66,7 @@ module Gatekeeper
 		#  - Door State
 
 		def fetch_all_doors
-			query(FETCH_ALL_DOORS).each.to_json
-		end
-
-
-		# Fetch the state of a single door (given by the door id).
-		# Returns the (symbolized) state of the door
-
-		def fetch_door_state(id)
-			result = fetch(:state, FETCH_DOOR_STATUS, id)
-			result.to_sym unless result.nil?
+			query(FETCH_ALL_DOORS).each
 		end
 
 
@@ -97,17 +93,39 @@ module Gatekeeper
 		# Check to see if the user can perform the specified action,
 		# perform the action (if allowed), and log it to the database
 
-		def do_action(user, action, arg, &block)
+		def do_action(user, action, dID, arg = nil, &block)
 			raise ArgumentError.new('Invalid user') if user.nil?
-			unless can_user_do?(user, action, arg)
-				log_action(user, :denial, action, arg)
-				yield false
+			if can_user_do?(user, action, dID)
+				case action
+					when :pop
+						@hardware.pop(dID)
+					when :unlock
+						@hardware.unlock(dID)
+					when :lock
+						@hardware.lock(dID)
+					when :add_ibutton
+						@hardware.add_to_al(dID, arg)
+					when :remove_ibutton
+						@hardware.remove_from_al(dID, arg)
+				end
+				log_action(user, :success, action, dID, arg)
+				yield({:success => true, :error => nil})
+			else
+				log_action(user, :denial, action, dID, arg)
+				yield({:success => false, :error => 'User is not allowed to perform specified action'})
 			end
-			# TODO: do the action
-			log_action(user, :success, action, arg)
-			yield true
 		end
 
+
+		# Fetch the state of a single door (given by the door id).
+
+		def fetch_door_state(id, callback)
+			call = Proc.new do |state|
+				@@states[id] = state
+				callback(state)
+			end
+			@hardware.query(id, call)
+		end
 
 		private
 
@@ -116,10 +134,10 @@ module Gatekeeper
 		# perform the specified action.
 		# Returns a boolean indicating whether or not the user is allowed.
 
-		def can_user_do?(user, action, arg)
+		def can_user_do?(user, action, dID)
 			if USER_ACTIONS.include?(action)
-				raise ArgumentError.new('arg must be a fixnum') unless arg.is_a?(Fixnum)
-				return fetch(:count, CAN_USER_PERFORM_ACTION, user.id, arg) == 0
+				raise ArgumentError.new('dID must be a fixnum') unless dID.is_a?(Fixnum)
+				return fetch(:count, CAN_USER_PERFORM_ACTION, user.id, dID) == 0
 			elsif ADMIN_ACTIONS.include?(action)
 				return user.admin
 			else
@@ -130,12 +148,13 @@ module Gatekeeper
 
 		# Logs the action by the user to the database
 
-		def log_action(user, type, action, arg = nil)
+		def log_action(user, type, action, dID, arg = nil)
+			arg ||= ''
 			type_id = get_id_or_create(:types, type)
 			action_id = get_id_or_create(:actions, action)
 			service_id = get_id_or_create(:services, self.class.to_s.downcase)
 
-			query(LOG_EVENT, user.id, type_id, action_id, arg, service_id)
+			query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
 		end
 
 
@@ -155,7 +174,7 @@ module Gatekeeper
 		# attribute from the first result or nil if there are no results.
 
 		def fetch(attribute, query, *args)
-			results = db_query(query, *args)
+			results = query(query, *args)
 			return if results.size == 0
 
 			out = []
