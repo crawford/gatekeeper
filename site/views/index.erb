@@ -1,34 +1,182 @@
+<!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Gatekeeper</title>
-		<style type="text/css" src="main.css"></style>
-	</head>
-	<body>
-		<div id="content">
-			<h1>Welcome to Gatekeeper</h1>
-			<div id="doors">
-				<table>
-					<% (1..3).each do %>
-					<tr>
-						<td>
-							Research Room
-						</td>
-						<td class="locked">
-							Locked
-						</td>
-						<td>
-							<button type="button">Unlock</button>
-						</td>
-						<td>
-							<button type="button">Pop</button>
-						</td>
-						<td>
-							<a href="/">Log</a>
-						</td>
-					</tr>
-					<% end %>
-				</table>
-			</div>
-		</div>
-	</body>
+    <head>
+        <style type="text/css">
+            body {
+                margin: 0px 0px 0px 0px;
+                padding: 0px 0px 0px 0px;
+                background: #cccccc;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            .header {
+                margin: 50px auto 0px auto;
+                padding: 10px 10px 10px 10px;
+                width: 960px;
+                color: #434343;
+                background: #fff;
+                border-radius: 10px;
+                -moz-border-radius: 10px;
+                font-size: 2em;
+            }
+
+            .container {
+                margin: 10px auto 0px auto;
+                padding: 10px 10px 10px 10px;
+                width: 960px;
+                background: #fff;
+                border-radius: 10px;
+                -moz-border-radius: 10px;
+            }
+
+                .container .door {
+                    margin: 0px 0px 0px 0px;
+                    padding: 10px 10px 10px 10px;
+                    border-radius: 10px;
+                    -moz-border-radius: 10px;
+                    color: #434343;
+                    overflow: hidden;
+                }
+
+                    .container .door .door-name {
+                        margin: 0px 0px 0px 0px;
+                        padding: 0px 0px 0px 0px;
+                        width: 200px;
+                        position: relative;
+                        float: left;
+                    }
+
+                    .container .door .actions {
+                        margin: 0px 0px 0px 0px;
+                        padding: 0px 0px 0px 0px;
+                        width: 740px;
+                        position: relative;
+                        float: right;
+                    }
+
+                        .container .door .actions .action-button {
+                            margin: 0px 0px 0px 0px;
+                            padding: 5px 15px 5px 15px;
+                            background: #bbbbbb;
+                            border: 1px solid #a0a0a0;
+                            position: relative;
+                            float: right;
+                            border-radius: 5px;
+                            font-size: .8em;
+                            color: #434343;
+
+                        }
+                        
+                            .container .door .actions .action-button:hover {
+                                background: #808080;
+                                color: #eeeeee;
+                                cursor: pointer;
+                            }
+
+                            .container .door .actions .action-button:not(:last-of-type){
+                                margin-left: 10px;
+                            }
+
+                .container .door:not(:first-of-type){
+                    margin-top: 10px;
+                }
+    
+                .closed {
+                    background: green;
+                    opacity: .5;
+                }
+
+                .open {
+                    background: red;
+                    opacity: .5;
+
+                }
+
+                .unknown {
+                    background: #dddddd;
+
+                }
+
+                .popping {
+                    background: orange;
+                    opacity: .5;
+                }
+
+
+        </style>
+        <script type="text/javascript">
+
+            function handle_action_button(event){
+                console.log(event);
+
+                var elem = event.target;
+
+                switch(elem.getAttribute('door_action')){
+                    case 'pop':
+                        pop_door(elem);
+                        break;
+
+                    case 'unlock':
+                        unlock_door(elem);
+                        break;
+
+                    case 'lock': 
+                        lock_door(elem);
+                        break;
+                }
+            }
+
+            function pop_door(element){
+
+            }
+
+            function unlock_door(element){
+
+            }
+
+            function lock_door(element){
+
+            }
+
+            document.addEventListener("DOMContentLoaded", function(){
+                var door_buttons = document.querySelectorAll('.action-button');
+                    
+                for(var i = 0; i < door_buttons.length; i++){
+                    door_buttons[i].addEventListener('click', handle_action_button, false);
+                }
+            }, false);
+        </script>
+    </head>
+    <body>
+        <div class="header">
+            CSH Gatekeeper
+        </div>
+        <div class="container">
+            <div class="door closed">
+                <div class="door-name">
+                    Door Name
+                </div>
+                <div class="actions">
+                    <div class="action-button" door_action="pop" door_id="">
+                        Pop
+                    </div>
+                    <div class="action-button" door_action="unlock" door_id="">
+                        Unlock
+                    </div>
+                    <div class="action-button" door_action="lock" door_id="">
+                        Lock
+                    </div>
+                </div>
+            </div>
+            <div class="door open">
+                Door Name
+            </div>
+            <div class="door unknown">
+                Door Name
+            </div>
+            <div class="door popping">
+                Door Name
+            </div>
+        </div>
+    </body>
 </html>
