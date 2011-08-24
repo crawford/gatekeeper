@@ -5,13 +5,8 @@ class MessageProcess < Fiber
 	CANCELLED = 0.freeze
 	TIMEDOUT  = 1.freeze
 
-	def callback=(callback)
-		@callback = callback
-	end
-
-	def cleanup=(callback)
-		@cleanup = callback
-	end
+	attr_accessor :callback
+	attr_accessor :cleanup
 
 	def initialize(&blk)
 		if block_given?
@@ -36,8 +31,8 @@ class MessageProcess < Fiber
 
 	def cancel
 		@timer.cancel
-		@callback.call(CANCELLED)
-		@cleanup.call
+		@callback.call(CANCELLED) if @callback
+		@cleanup.call if @cleanup
 	end
 
 	private
@@ -45,8 +40,8 @@ class MessageProcess < Fiber
 	def start_timer
 		@timer.cancel if @timer
 		@timer = EM::Timer.new(5) do
-			@callback.call(TIMEDOUT)
-			@cleanup.call
+			@callback.call(TIMEDOUT) if @callback
+			@cleanup.call if @cleanup
 		end
 	end
 end

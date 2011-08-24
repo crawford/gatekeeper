@@ -1,6 +1,9 @@
 #!/usr/bin/ruby
 
-class Emulator
+require 'socket'
+require 'thread'
+
+class Emulator < Thread
 	C_QUERY = 'Q'
 	C_RESPONSE = 'R'
 	C_LOCK = 'L'
@@ -38,22 +41,28 @@ class Emulator
 		                  C_ERROR =>    method(:cmd_error),
 		                  C_DOOR =>     method(:cmd_door)
 		                }.freeze
+		super do
+			run
+		end
 	end
 
 	def run
 		loop do
 			(r,w,x) = select([@device], [], [], 5)
 
-			unless r.empty?
-				read_message(@device.read)
+			if r
+				read_message(@device.readline)
 			end
 		end
 	end
 
 	def read_message(message)
 		@msgbuf << message
+		p "Message: '#{message}'"
+		p "Buffer: '#{@msgbuf}'"
 
 		@msgbuf.split(TERMINATOR).each do |msg|
+			p msg
 			if msg.empty?
 				cmd_unknown(0)
 			else
@@ -89,7 +98,7 @@ class Emulator
 		raise 'Invalid id' unless id.between?(0, 255)
 		raise 'Invalid payload (too large)' unless payload.length <= MAX_PAYLOAD_LEN
 
-		message = command + id.chr + payload
+		message = command + id.chr + payload + "\n"
 		p "Sending message - #{message}"
 		@device.write message
 	end
@@ -169,23 +178,37 @@ class Emulator
 	end
 end
 
-if ARGS.size != 2 or (ARGS[1].lower != 'socket' and ARGS[1].lower != 'file')
-	p "Usgae: ./emulator file_name ('file' | 'socket')"
-end
+#if ARGS.size != 2 or (ARGS[1].lower != 'socket' and ARGS[1].lower != 'file')
+#	p "Usgae: ./emulator file_name ('file' | 'socket')"
+#end
+#
+#case ARGS[0]
+#	when 'file'
+#		device = File.new(ARGS[0], 'r+', {:autoclose => false})
+#	when 'socket'
+#		device = UNIXSocket.new(ARGS[0])
+#end
 
-case ARGS[0]
-	when 'file'
-		device = File.new(ARGS[0], 'r+', {:autoclose => false})
-	when 'socket'
-		device = UNIXSocket.new(ARGS[0])
-end
+puts "Waiting for connection..."
+
+socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+sockaddr = Socket.pack_sockaddr_in(1111, 'localhost')
+socket.bind(sockaddr)
+socket.listen(1)
+device, client_sockaddr = socket.accept
+
+puts "Received connection. Starting emulator..."
+
 e = Emulator.new(device)
-e.start
 
-e.read_message("Q\001\n")
-e.read_message("U\002\n")
-e.read_message("Q\003\n")
-e.read_message("D\006\006\n")
-e.read_message("L\004\n")
-e.read_message("Q\005\n")
-e.read_message("y\006\n")
+puts "Emulator started."
+
+e.join
+
+#e.read_message("Q\001\n")
+#e.read_message("U\002\n")
+#e.read_message("Q\003\n")
+#e.read_message("D\006\006\n")
+#e.read_message("L\004\n")
+#e.read_message("Q\005\n")
+#e.read_message("y\006\n")

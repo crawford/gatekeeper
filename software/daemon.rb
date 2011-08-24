@@ -28,9 +28,17 @@ def main
 
 	Daemons.run_proc('gatekeeper', :dir_mode => :script, :multiple => false, :log_output => true) do
 		EM.run do
-			hardware = Gatekeeper::HardwareInterface.instance
 			db = Mysql2::Client.new(databases)
-			hardware.setup(db)
+			zigbee = nil
+
+			EM.connect(servers[:zigzag][:host],
+			           servers[:zigzag][:port],
+			           Gatekeeper::ZigbeeInterface) do |z|
+				zigbee = z
+			end
+
+			hardware = Gatekeeper::HardwareInterface.instance
+			hardware.setup(db, zigbee)
 
 			EM.start_server(servers[:socket][:interface],
 			                servers[:socket][:port],
@@ -51,11 +59,6 @@ def main
 			                servers[:websocket][:port],
 			                Gatekeeper::WebSocketServer,
 			                servers[:websocket].merge(:database => databases))
-
-			#EM.connect(servers[:zigzag][:host],
-			#           servers[:zigzag][:port],
-			#           Gatekeeper::ZigzagClient,
-			#           servers[:zigzag])
 		end
 	end
 end

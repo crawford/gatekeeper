@@ -41,7 +41,7 @@ module Gatekeeper
 
 
 		def initialize
-			@zigbee = ZigbeeInterface.new
+			@zigbee = nil
 			@ethernet = nil
 			@ldap = Ldap.new
 			@db = nil
@@ -49,8 +49,42 @@ module Gatekeeper
 			@fibers = {}
 		end
 
-		def setup(db)
+		def setup(db, zigbee)
 			@db = db
+			@zigbee = zigbee
+			@zigbee.receive_callback = method(:process_message)
+		end
+
+		def process_message(data, sender)
+			cmd = data[0]
+			msgid = data[1]
+			payload = data[2..-1]
+
+			puts "CMD: #{cmd.dump}"
+			puts "MSGID: #{msgid.dump}"
+			puts "PAYLOAD: #{payload.dump}"
+
+			if (payload[-1] != "\n")
+				puts "Invalid message (#{data.dump})"
+				return
+			end
+
+			case cmd
+				when C_RESPONSE
+					key = "#{sender},#{msgid}"
+					if @fibers.has_key?(key)
+						@fibers.delete(key).resume(payload)
+					else
+						puts "Got a response for a non-existant fiber"
+					end
+				when C_IBUTTON
+					puts "IButton (#{payload})"
+					#TODO: process the ibutton
+				when C_ERROR
+					puts "An error occured on door #{sender} (#{payload.dump})"
+				else
+					puts "Unexpected message (#{data.dump})"
+			end
 		end
 
 
@@ -180,13 +214,8 @@ module Gatekeeper
 			msg = command + @msgid.to_s + payload.to_s + "\n"
 			@msgid += 1
 
-			puts "Sending message(#{msg}) to interface(#{interface})"
-			#TODO: actually send a message
-
-			v = @msgid - 1
-			EM::Timer.new(1) do
-				@fibers.delete("#{dID},#{v}").resume
-			end
+			puts "Sending message(#{msg.dump}) to interface(#{interface})"
+			interface.send_message('ZIGBEE', msg)
 		end
 
 
