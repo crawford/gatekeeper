@@ -1,0 +1,45 @@
+<html>
+	<head>
+		<title>Gatekeeper</title>
+		<style type="text/css" src="main.css"></style>
+	</head>
+	<body>
+		<div id="content">
+			<h1><%= door %> Log</h1>
+			<div id="log">
+				<table>
+					<tr>
+						<td>
+							Member
+						</td>
+						<td>
+							Result
+						</td>
+						<td>
+							Action
+						</td>
+						<td>
+							Time
+						</td>
+					</tr>
+					<% log.each do |entry| %>
+					<tr>
+						<td>
+							<%= entry['uuid'] %>
+						</td>
+						<td>
+							<%= entry['type'] %>
+						</td>
+						<td>
+							<%= entry['action'] %>
+						</td>
+						<td>
+							<%= entry['datetime'] %>
+						</td>
+					</tr>
+					<% end %>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>
