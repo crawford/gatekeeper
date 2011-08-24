@@ -32,7 +32,7 @@ module Gatekeeper
 		'.freeze
 		LOG_EVENT = '
 			INSERT INTO events
-			(time, user_id, type_id, action_id, action_did, action_arg, service_id) VALUES (NOW(), %d, %d, %d, %d, "%s", %d)
+			(datetime, user_id, type_id, action_id, action_did, action_arg, service_id) VALUES (NOW(), %d, %d, %d, %d, "%s", %d)
 		'.freeze
 
 

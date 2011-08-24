@@ -41,17 +41,19 @@ CREATE TABLE `doors` (
 DROP TABLE IF EXISTS `events`;
 CREATE TABLE `events` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `time` time NOT NULL,
+  `datetime` datetime NOT NULL,
   `user_id` int(11) NOT NULL,
   `type_id` int(11) NOT NULL,
   `action_arg` int(11) DEFAULT NULL,
   `action_id` int(11) NOT NULL,
+  `action_did` int(11) NOT NULL,
   `service_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `type_id` (`type_id`),
   KEY `door_id` (`action_arg`),
-  KEY `action_id` (`action_id`)
+  KEY `action_id` (`action_id`),
+  KEY `action_did` (`action_did`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `interfaces`;
