@@ -32,30 +32,62 @@ module Gatekeeper
 
 		def parse_request(uri)
 			uri = uri[1..-1].split('/')
-			#uri[0] ||= 'index.html'
 			case uri[0]
-				#when 'index.html'
-				#	File.open('../site/views/index.html') do |page|
-				#		send_data(page.read)
-				#	end
 				when 'all_doors'
-					send_data(fetch_all_doors)
+					# /all_doors
+					send_data(fetch_all_doors.to_json)
 				when 'door_state'
+					# /door_state/(door id)
 					id = uri[1].to_i
 					res = fetch_door_state(id)
 					res ||= 'Invalid or missing ID'
 
 					send_data(res)
 				when 'unlock'
-					door = uri[1].to_i
+					# /unlock/(door id)
+					# POST username: (username)
+					# POST password: (password)
+					id = uri[1].to_i
 					user = parse_and_auth(uri[2..-1])
 					if user.nil?
 						send_data('Invalid parameters')
 					else
-						do_action(user, :unlock, door) do |result|
+						do_action(user, :unlock, id) do |result|
 							send_data(result)
 						end
 					end
+				when 'lock'
+					# /lock/(door id)
+					# POST username: (username)
+					# POST password: (password)
+					id = uri[1].to_i
+					user = parse_and_auth(uri[2..-1])
+					if user.nil?
+						send_data('Invalid parameters')
+					else
+						do_action(user, :lock, id) do |result|
+							send_data(result)
+						end
+					end
+				when 'pop'
+					# /pop/(door id)
+					# POST username: (username)
+					# POST password: (password)
+					id = uri[1].to_i
+					user = parse_and_auth(uri[2..-1])
+					if user.nil?
+						send_data('Invalid parameters')
+					else
+						do_action(user, :pop, id) do |result|
+							send_data(result)
+						end
+					end
+				when 'set_code'
+
+				when 'add_to_access_list'
+
+				when 'remove_from_access_list'
+
 				when 'favicon'
 				else
 					send_data('Invalid Command')
