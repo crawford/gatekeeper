@@ -21,10 +21,10 @@ module Gatekeeper
 		end
 
 		def onmessage(msg)
-			command, payload = msg.split(':')
+			command, payload, id = msg.split(':')
 
 			unless command and payload
-				send("Malformed instruction (Command:Payload)")
+				send("Malformed instruction (Command:Payload:Id)")
 				return
 			end
 
@@ -34,15 +34,15 @@ module Gatekeeper
 					send({:result => true, :error => nil}.to_json)
 				when 'POP'
 					do_action(@user, :pop, payload.to_i) do |result|
-						send(result.to_json)
+						send(result.merge({:id => id}).to_json)
 					end
 				when 'LOCK'
 					do_action(@user, :lock, payload.to_i) do |result|
-						send(result.to_json)
+						send(result.merge({:id => id}).to_json)
 					end
 				when 'UNLOCK'
 					do_action(@user, :unlock, payload.to_i) do |result|
-						send(result.to_json)
+						send(result.merge({:id => id}).to_json)
 					end
 				else
 					send({:success => false, :error => "Unrecognized command '#{command}'"})

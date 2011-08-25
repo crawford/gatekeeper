@@ -64,7 +64,10 @@ module Gatekeeper
 			puts "MSGID: #{msgid.dump}"
 			puts "PAYLOAD: #{payload.dump}"
 
-			if (payload[-1] != "\n")
+			# Check for the trailing newline and remove it if its there
+			if (payload[-1] == "\n")
+				payload = payload[0..-2]
+			else
 				puts "Invalid message (#{data.dump})"
 				return
 			end

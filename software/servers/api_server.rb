@@ -96,20 +96,23 @@ module Gatekeeper
 		def do_action(user, action, dID, arg = nil, &block)
 			raise ArgumentError.new('Invalid user') if user.nil?
 			if can_user_do?(user, action, dID)
+				callback = Proc.new do |result|
+					log_action(user, :success, action, dID, arg)
+					yield result
+				end
+
 				case action
 					when :pop
-						@hardware.pop(dID)
+						@hardware.pop(dID, callback)
 					when :unlock
-						@hardware.unlock(dID)
+						@hardware.unlock(dID, callback)
 					when :lock
-						@hardware.lock(dID)
+						@hardware.lock(dID, callback)
 					when :add_ibutton
-						@hardware.add_to_al(dID, arg)
+						@hardware.add_to_al(dID, arg, callback)
 					when :remove_ibutton
-						@hardware.remove_from_al(dID, arg)
+						@hardware.remove_from_al(dID, arg, callback)
 				end
-				log_action(user, :success, action, dID, arg)
-				yield({:success => true, :error => nil})
 			else
 				log_action(user, :denial, action, dID, arg)
 				yield({:success => false, :error => 'User is not allowed to perform specified action'})

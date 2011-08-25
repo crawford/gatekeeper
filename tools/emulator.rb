@@ -90,7 +90,9 @@ class Emulator < Thread
 	end
 
 	def send_response(id, payload = "S")
-		send_message(C_RESPONSE, id, @doorID.chr + payload)
+		#send_message(C_RESPONSE, id, @doorID.chr + payload)
+		#TODO: Figure out wether zigzag can return the origin zigbee
+		send_message(C_RESPONSE, id, payload)
 	end
 
 	def send_message(command, id, payload)
