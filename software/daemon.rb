@@ -11,11 +11,9 @@ require 'daemons'
 
 add_to_loadpath("config", "servers", "lib", "models")
 
-require 'control_server'
 require 'http_server'
 require 'socket_server'
 require 'web_socket_server'
-require 'zigzag_client'
 require 'hardware_interface'
 
 
@@ -44,11 +42,6 @@ def main
 			                servers[:socket][:port],
 			                Gatekeeper::SocketServer,
 			                servers[:socket].merge(:database => databases))
-
-			EM.start_server(servers[:control][:interface],
-			                servers[:control][:port],
-			                Gatekeeper::ControlServer,
-			                servers[:control].merge(:database => databases))
 
 			EM.start_server(servers[:http][:interface],
 			                servers[:http][:port],
