@@ -1,19 +1,10 @@
-#define F_CPU 1000000
-
 #include "motor.h"
+#include "utils.h"
 #include <avr/io.h>
 #include <util/delay.h>
 
 static const int CLOSE_PIN = 4;
 static const int OPEN_PIN  = 5;
-
-static inline void OUTPUT_HIGH(pin) {
-	PORTD |= (1 << pin);
-}
-
-static inline void OUTPUT_LOW(pin) {
-	PORTD &= ~(1 << pin);
-}
 
 static inline void MOTOR_DELAY() {
 	_delay_ms(100);
@@ -23,23 +14,23 @@ static inline void MOTOR_DELAY() {
 void init_motor() {
 	// THIS IS IMPORTANT!  Pull the two motor pins low
 	// (the H-Bridge will short if they are both high)
-	OUTPUT_LOW(OPEN_PIN);
-	OUTPUT_LOW(CLOSE_PIN);
+	WRITE_LOW(&PORTD, OPEN_PIN);
+	WRITE_LOW(&PORTD, CLOSE_PIN);
 
 	// Set the two motor pins to output
-	DDRD |= (1 << OPEN_PIN);
-	DDRD |= (1 << CLOSE_PIN);
+	SET_MODE(&DDRD, OPEN_PIN, OUTPUT);
+	SET_MODE(&DDRD, CLOSE_PIN, OUTPUT);
 }
 
 void open() {
-	OUTPUT_HIGH(OPEN_PIN);
+	WRITE_HIGH(&PORTD, OPEN_PIN);
 	MOTOR_DELAY();
-	OUTPUT_LOW(OPEN_PIN);
+	WRITE_LOW(&PORTD, OPEN_PIN);
 }
 
 void close() {
-	OUTPUT_HIGH(CLOSE_PIN);
+	WRITE_HIGH(&PORTD, CLOSE_PIN);
 	MOTOR_DELAY();
-	OUTPUT_LOW(CLOSE_PIN);
+	WRITE_LOW(&PORTD, CLOSE_PIN);
 }
 

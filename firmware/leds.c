@@ -1,4 +1,5 @@
 #include "leds.h"
+#include "utils.h"
 #include <avr/io.h>
 
 void _isr_timer();
@@ -6,23 +7,14 @@ void _isr_timer();
 volatile int red_flash_count;
 volatile int green_flash_count;
 
-
 static const int GREEN_LED_PIN = 6;
 static const int RED_LED_PIN   = 5;
-
-static inline void LED_ON(pin) {
-	PORTD |= (1 << pin);
-}
-
-static inline void LED_OFF(pin) {
-	PORTD &= ~(1 << pin);
-}
 
 
 void init_leds() {
 	// Turn off the leds
-	LED_OFF(RED_LED_PIN);
-	LED_OFF(GREEN_LED_PIN);
+	WRITE_LOW(&PORTD, RED_LED_PIN);
+	WRITE_LOW(&PORTD, GREEN_LED_PIN);
 
 	// Set the pins to output
 	DDRD |= (1 << GREEN_LED_PIN);
@@ -50,9 +42,9 @@ void _isr_timer() {
 	// Flash the red LED
 	if (red_flash_count) {
 		if (red_flash_count & 1) {
-			LED_OFF(RED_LED_PIN);
+			WRITE_LOW(&PORTD, RED_LED_PIN);
 		} else {
-			LED_ON(RED_LED_PIN);
+			WRITE_HIGH(&PORTD, RED_LED_PIN);
 		}
 
 		red_flash_count--;
@@ -61,9 +53,9 @@ void _isr_timer() {
 	// Flash the green LED
 	if (green_flash_count) {
 		if (green_flash_count & 1) {
-			LED_OFF(GREEN_LED_PIN);
+			WRITE_LOW(&PORTD, GREEN_LED_PIN);
 		} else {
-			LED_ON(GREEN_LED_PIN);
+			WRITE_HIGH(&PORTD, GREEN_LED_PIN);
 		}
 
 		green_flash_count--;

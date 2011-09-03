@@ -9,7 +9,7 @@ program: $(TARGET).hex
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-$(TARGET).obj: leds.o motor.o main.o
+$(TARGET).obj: leds.o motor.o main.o onewire.o
 	$(CC) $(CFLAGS) $? -o $@
 
 %.hex: %.obj
