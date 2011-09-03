@@ -22,16 +22,36 @@ module Gatekeeper
 
 		def onmessage(msg)
 			command, payload, id = msg.split(':')
+			command.upcase!
 
 			unless command and payload
-				send("Malformed instruction (Command:Payload:Id)")
+				send("Malformed instruction (Command:Payload[:Id])")
 				return
 			end
 
 			case command
 				when 'AUTH'
 					#TODO: authenticate the user
-					send({:result => true, :error => nil}.to_json)
+					send({:result => true, :error => nil, :id => id}.to_json)
+					send({:states => [
+					       {
+					         :door_id => 1,
+					         :state => 'unlocked',
+					         :door_name => 'Research Room',
+					         :lock => true,
+					         :unlock => false,
+					         :pop => true
+					       },
+					       {
+					         :door_id => 2,
+					         :state => 'locked',
+					         :door_name => 'Poop Room',
+					         :lock => true,
+					         :unlock => true,
+					         :pop => true
+					       }
+					       ]
+					    }.to_json)
 				when 'POP'
 					do_action(@user, :pop, payload.to_i) do |result|
 						send(result.merge({:id => id}).to_json)
@@ -45,7 +65,7 @@ module Gatekeeper
 						send(result.merge({:id => id}).to_json)
 					end
 				else
-					send({:success => false, :error => "Unrecognized command '#{command}'"})
+					send({:success => false, :error => "Unrecognized command '#{command}'"}.to_json)
 			end
 		end
 

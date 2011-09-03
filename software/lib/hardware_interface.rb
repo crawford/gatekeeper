@@ -78,7 +78,7 @@ module Gatekeeper
 					if @fibers.has_key?(key)
 						@fibers.delete(key).resume(payload)
 					else
-						puts "Got a response for a non-existant fiber"
+						puts "Got a response for a non-existant fiber (key: #{key})"
 					end
 				when C_IBUTTON
 					puts "IButton (#{payload})"
