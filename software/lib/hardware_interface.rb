@@ -1,8 +1,11 @@
 require 'mysql2'
+require 'singleton'
 #require 'message_process'
 
 module Gatekeeper
 	class HardwareInterface
+		include Singleton
+
 		FETCH_INTERFACE_FROM_DID = '
 			SELECT interfaces.name AS interface
 			FROM doors, interfaces
