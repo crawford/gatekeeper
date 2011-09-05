@@ -5,9 +5,9 @@ set :scm, :git
 set :use_sudo, false
 set :deploy_to, "/var/gatekeeper"
 
-role :web, "gatekeeper"
-role :app, "gatekeeper"
-role :db,  "gatekeeper", :primary => true
+role :web, "gatekeeper.csh.rit.edu"
+role :app, "gatekeeper.csh.rit.edu"
+role :db,  "gatekeeper.csh.rit.edu", :primary => true
 
 set :user, "zuul"
 
@@ -27,7 +27,13 @@ namespace :deploy do
 	task :copy_config, :roles => :app do
 		run "cp #{shared_path}/database.yml #{release_path}/service/config/database.yml"
 	end
+
+	task :restart_unicorn, :roles => :app do
+		run "pkill unicorn"
+		run "unicorn -c #{release_path}/site/config/unicorn.rb -D"
+	end
 end
 
 after 'deploy', 'deploy:fix_directories'
 after 'deploy', 'deploy:copy_config'
+after 'deploy', 'deploy:restart_unicorn'
