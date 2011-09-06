@@ -1,5 +1,6 @@
 require 'sinatra'
 require 'mysql2'
+require 'socket'
 
 class Test < Sinatra::Base
 	FETCH_LOG = '
@@ -18,7 +19,10 @@ class Test < Sinatra::Base
 	'.freeze
 
 	get '/' do 
-		erb :index
+		hostname = Socket.gethostbyname(Socket.gethostname).first
+		#TODO - Look this up
+		wsport = 8080
+		erb :index, :locals => {:hostname => hostname, :wsport => wsport}
 	end
 
 	get '/log/:door' do

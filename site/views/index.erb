@@ -119,13 +119,14 @@
 
 
         </style>
+        <title>Gatekeeper</title>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
         <script type="text/javascript">
         $(document).ready(function(){
 
             var sent_actions = {};
 
-            var socket = new WebSocket('ws://deepwater.acrawford.com:8080');
+            var socket = new WebSocket(<%= "ws://#{hostname}:#{wsport}" %>);
             socket.onopen = function(data){
                 socket.send("AUTH:poop");
             }
@@ -153,7 +154,7 @@
                 if('states' in data){
                     update_states(data.states);
                 }
-                
+
                 if(data.id in sent_actions){
                     sent_actions[data.id].action(data);
                 }
@@ -180,7 +181,7 @@
                         door.append('<div class="door-name">' + states[i].door_name + '</div>');
 
                         door.append('<div class="door-message"></div>');
-                       
+
                         var pop = $('<input type="button" class="action-button" door_action="pop" door_id="' + states[i].door_id + '" value="Pop">'),
                             unlock = $('<input type="button" class="action-button" door_action="unlock" door_id="' + states[i].door_id + '" value="Unlock">'),
                             lock = $('<input type="button" class="action-button" door_action="lock" door_id="' + states[i].door_id + '" value="Lock">');
@@ -191,15 +192,13 @@
 
                         if(states[i].unlock == false){
                             unlock.attr('disabled', true);
-                            
                         }
 
                         if(states[i].lock == false){
                             lock.attr('disabled', true);
-                            
                         }
-                        
-                        
+
+
                         var actions = $('<div class="actions">' + '</div>');
 
                         actions.append(pop);
@@ -234,14 +233,12 @@
 
             function pop_door(element){
                 var id = (new Date()).getTime();
-                
+
                 var callback = function(response){
                     var data = sent_actions[response.id];
                     var door = $('#' + data.door_id);
-                    
+
                     if(response.success == true){ 
-                    
-                    
                         door.attr('class', 'door');
                         door.addClass('open');
 
@@ -267,9 +264,7 @@
             }
 
             function unlock_door(element){
-                
                 var id = (new Date()).getTime();
-                
                 var callback = function(response){
                     var data = sent_actions[response.id];
                     var door = $('#' + data.door_id);
@@ -293,19 +288,15 @@
             }
 
             function lock_door(element){
-                 
                 var id = (new Date()).getTime();
-                
                 var callback = function(response){
                     var data = sent_actions[response.id];
                     var door = $('#' + data.door_id);
-                    
+
                     if(response.error == null){
-                    
                         door.attr('class', 'door');
                         door.addClass('closed');
                     } else {
-                        
                         door.find('.door-message').html(response.error);
 
                         setTimeout(function(){
