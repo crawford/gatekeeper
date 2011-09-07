@@ -16,6 +16,7 @@ GEM
     highline (1.6.2)
     http_parser.rb (0.5.1)
     mysql2 (0.3.6)
+    net-ldap (0.2.2)
     net-scp (1.0.4)
       net-ssh (>= 1.99.1)
     net-sftp (2.0.5)
@@ -44,6 +45,7 @@ DEPENDENCIES
   eventmachine
   http_parser.rb
   mysql2
+  net-ldap
   railsless-deploy
   rake
   shotgun
