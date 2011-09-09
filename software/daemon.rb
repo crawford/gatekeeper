@@ -16,19 +16,21 @@ require 'socket_server'
 require 'web_socket_server'
 require 'hardware_interface'
 
-
 def main
 	servers   = keys_to_symbols(YAML.load_file('config/servers.yml')).freeze
-	databases = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+	database  = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+	ldap      = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+	creds     = {:database => database, :ldap => ldap}.freeze
 
 	EM.kqueue
 	EM.epoll
 
 	Daemons.run_proc('gatekeeper', :dir_mode => :script, :multiple => false, :log_output => true) do
 		EM.run do
-			db = Mysql2::Client.new(databases)
-			zigbee = nil
+			# Setup the persistant connections
+			db = Mysql2::Client.new(database)
 
+			zigbee = nil
 			EM.connect(servers[:zigzag][:host],
 			           servers[:zigzag][:port],
 			           Gatekeeper::ZigbeeInterface) do |z|
@@ -38,20 +40,21 @@ def main
 			hardware = Gatekeeper::HardwareInterface.instance
 			hardware.setup(db, zigbee)
 
+			# Setup the worker connections
 			EM.start_server(servers[:socket][:interface],
 			                servers[:socket][:port],
 			                Gatekeeper::SocketServer,
-			                servers[:socket].merge(:database => databases))
+			                servers[:socket].merge(creds))
 
 			EM.start_server(servers[:http][:interface],
 			                servers[:http][:port],
 			                Gatekeeper::HttpServer,
-			                servers[:http].merge(:database => databases))
+			                servers[:http].merge(creds))
 
 			EM.start_server(servers[:websocket][:interface],
 			                servers[:websocket][:port],
 			                Gatekeeper::WebSocketServer,
-			                servers[:websocket].merge(:database => databases))
+			                servers[:websocket].merge(creds))
 		end
 	end
 end

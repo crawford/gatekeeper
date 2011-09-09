@@ -41,7 +41,7 @@ module Gatekeeper
 		def initialize(config)
 			begin
 				@db = Mysql2::Client.new(config[:database])
-				@ldap = nil
+				@ldap = Ldap.new(config[:ldap])
 				@last_error = nil
 				@hardware = HardwareInterface.instance
 				@@states ||= nil
@@ -52,6 +52,7 @@ module Gatekeeper
 						p door
 					end
 				end
+			# TODO: Rescue LDAP connection errors
 			rescue Mysql2::Error => e
 				p e
 				@last_error = e
@@ -78,9 +79,8 @@ module Gatekeeper
 			case args.size
 				# (iButtonID)
 				when 1
-					#TODO: actually lookup the user from LDAP
-					return User.new(1, false)
-				# (username, password)
+					info = @ldap.info_for_ibutton(args[0])
+					return User.new(info[:uuid], false, info[:name])
 				when 2
 					#TODO: actually lookup the user from LDAP
 					return User.new(2, true)
@@ -114,7 +114,7 @@ module Gatekeeper
 						@hardware.remove_from_al(dID, arg, callback)
 				end
 			else
-				log_action(user, :denial, action, dID, arg)
+				log_action(user.uuid, :denial, action, dID, arg)
 				yield({:success => false, :error => 'User is not allowed to perform specified action'})
 			end
 		end
@@ -140,7 +140,7 @@ module Gatekeeper
 		def can_user_do?(user, action, dID)
 			if USER_ACTIONS.include?(action)
 				raise ArgumentError.new('dID must be a fixnum') unless dID.is_a?(Fixnum)
-				return fetch(:count, CAN_USER_PERFORM_ACTION, user.id, dID) == 0
+				return fetch(:count, CAN_USER_PERFORM_ACTION, user.uuid, dID) == 0
 			elsif ADMIN_ACTIONS.include?(action)
 				return user.admin
 			else
@@ -157,7 +157,7 @@ module Gatekeeper
 			action_id = get_id_or_create(:actions, action)
 			service_id = get_id_or_create(:services, self.class.to_s.downcase)
 
-			query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
+			query(LOG_EVENT, user.uuid, type_id, action_id, dID, arg, service_id)
 		end
 
 

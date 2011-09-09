@@ -43,7 +43,6 @@ module Gatekeeper
 		def initialize
 			@zigbee = nil
 			@ethernet = nil
-			@ldap = Ldap.new
 			@db = nil
 			@msgid = 0
 			@fibers = {}
@@ -130,13 +129,13 @@ module Gatekeeper
 			# YOU WILL GET DUPLICATES
 			# Look up iButtons
 			iButtons = users.collect do |user|
-				@ldap.ibutton_for_user(user)
+				user.ibutton
 			end
 
 			fiber = MessageProcess.new do
 				# The list was updated on the hardware, now update the database
 				values = users.collect do |user|
-					"(#{user}, #{dID})"
+					"(#{user.uuid}, #{dID})"
 				end
 				db_query(INSERT_INTO_ACCESS_LIST, values.join(','))
 			end
@@ -152,7 +151,7 @@ module Gatekeeper
 
 			# Look up iButtons
 			iButtons = existing.collect do |user|
-				@ldap.ibutton_for_user(user)
+				user.ibutton
 			end
 
 			fiber = MessageProcess.new do
@@ -165,7 +164,7 @@ module Gatekeeper
 
 					# The new iButtons were saved so update the DB
 					values = existing.collect do |user|
-						"('#{user}', '#{dID}')"
+						"('#{user.uuid}', '#{dID}')"
 					end
 					db_query(INSERT_INTO_ACCESS_LIST, values.join(','))
 				end

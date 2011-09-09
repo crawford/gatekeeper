@@ -14,7 +14,8 @@ module Gatekeeper
 			@onerror   = method(:onerror)
 			@onclose   = method(:onclose)
 
-			@user = User.new(1, false)
+			#@user = User.new(1, false, "test", "000")
+			@user = nil
 		end
 
 		def onopen
@@ -32,6 +33,7 @@ module Gatekeeper
 			case command
 				when 'AUTH'
 					#TODO: authenticate the user
+					@user = User.new(1, false, "test user", "00000")
 					send({:result => true, :error => nil, :id => id}.to_json)
 					send({:states => [
 					       {
