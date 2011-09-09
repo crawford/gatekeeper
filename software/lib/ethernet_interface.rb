@@ -1,0 +1,60 @@
+require 'socket'
+
+FETCH_ETHERNET_DOOR = '
+	SELECT doors.name AS name, message_address AS dID
+	FROM doors, interfaces
+	WHERE interface_id = interfaces.id AND
+	      interfaces.name = "ethernet" AND
+	      hardware_address = "%s"
+'.freeze
+
+module Gatekeeper
+	class EthernetInterface < EM::Connection
+		attr_accessor :receive_callback
+
+		def initialize(config)
+			@db = Mysql2::Client.new(config[:database])
+		end
+
+		def send_message(address, message)
+			puts "Ethernet: Sending #{message.dump} to #{address}"
+		end
+
+		def post_init
+			port, ip = Socket.unpack_sockaddr_in(get_peername)
+
+			door = query(FETCH_ETHERNET_DOOR, ip).first
+			unless door
+				puts "Unknown device connected from #{ip}"
+				close_connection
+				return
+			end
+
+			puts "'#{door['name']}' device connected"
+
+			num = door['dID'].to_i.chr
+			send_data("D\001#{num}\n")
+		end
+
+		def receive_data(data)
+			puts "Received data from ethernet (#{data.dump}) length: #{data.length}"
+			@receive_callback.call(data, 1)
+		end
+
+		def unbind
+			puts '========================='
+			puts 'Connection to Board Lost'
+			puts '========================='
+		end
+
+
+		private
+
+
+		# Substitutes the args into the query and executes it.
+
+		def query(query, *args)
+			@db.query(query % args)
+		end
+	end
+end

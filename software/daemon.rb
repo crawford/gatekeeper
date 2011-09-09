@@ -15,6 +15,7 @@ require 'http_server'
 require 'socket_server'
 require 'web_socket_server'
 require 'hardware_interface'
+require 'ethernet_interface'
 
 def main
 	servers   = keys_to_symbols(YAML.load_file('config/servers.yml')).freeze
@@ -54,6 +55,11 @@ def main
 			EM.start_server(servers[:websocket][:interface],
 			                servers[:websocket][:port],
 			                Gatekeeper::WebSocketServer,
+			                servers[:websocket].merge(creds))
+
+			EM.start_server(servers[:ethernet][:interface],
+			                servers[:ethernet][:port],
+			                Gatekeeper::EthernetInterface,
 			                servers[:websocket].merge(creds))
 		end
 	end
