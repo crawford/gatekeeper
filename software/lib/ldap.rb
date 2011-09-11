@@ -5,14 +5,14 @@ LDAP_USER_BASE = 'ou=Users,dc=csh,dc=rit,dc=edu'.freeze
 
 class Ldap
 	def initialize(config)
-		host     = config[:host]
-		port     = config[:port]
+		@host     = config[:host]
+		@port     = config[:port]
 		username = config[:username]
 		password = config[:password]
 
 		@ldap = Net::LDAP.new({
-			:host => host,
-			:port => port,
+			:host => @host,
+			:port => @port,
 			:auth => {
 				:method   => :simple,
 				:username => username,
@@ -35,6 +35,21 @@ class Ldap
 	def info_for_username(username)
 		filter = Net::LDAP::Filter.eq('uid', username)
 		perform_info_search(filter)
+	end
+
+	def validate_user_credentials(username, password)
+		conn = Net::LDAP.new({
+			:host => @host,
+			:port => @port,
+			:auth => {
+				:method   => :simple,
+				:username => "uid=#{username}, #{LDAP_USER_BASE}",
+				:password => password
+			},
+			:encryption => :simple_tls
+		})
+		p conn.get_operation_result
+		conn.bind
 	end
 
 	private

@@ -26,9 +26,14 @@ module Gatekeeper
 			FROM %s
 			WHERE name = "%s"
 		'.freeze
+		GET_ID_FROM_UUID = '
+			SELECT id
+			FROM users
+			WHERE uuid = "%s"
+		'.freeze
 		INSERT_VALUE = '
 			INSERT INTO %s
-			(name) VALUES ("%s")
+			(%s) VALUES ("%s")
 		'.freeze
 		LOG_EVENT = '
 			INSERT INTO events
@@ -80,10 +85,17 @@ module Gatekeeper
 				# (iButtonID)
 				when 1
 					info = @ldap.info_for_ibutton(args[0])
-					return User.new(info[:uuid], false, info[:name])
+					return create_user_by_info(info)
 				when 2
-					#TODO: actually lookup the user from LDAP
-					return User.new(2, true)
+					username = args[0]
+					password = args[1]
+
+					if @ldap.validate_user_credentials(username, password)
+						info = @ldap.info_for_username(username)
+						return create_user_by_info(info)
+					else
+						return nil
+					end
 				else
 					raise ArgumentError.new('Invalid number of arguments (expecting 1 or 2)')
 			end
@@ -114,7 +126,7 @@ module Gatekeeper
 						@hardware.remove_from_al(dID, arg, callback)
 				end
 			else
-				log_action(user.uuid, :denial, action, dID, arg)
+				log_action(user.id, :denial, action, dID, arg)
 				yield({:success => false, :error => 'User is not allowed to perform specified action'})
 			end
 		end
@@ -140,7 +152,7 @@ module Gatekeeper
 		def can_user_do?(user, action, dID)
 			if USER_ACTIONS.include?(action)
 				raise ArgumentError.new('dID must be a fixnum') unless dID.is_a?(Fixnum)
-				return fetch(:count, CAN_USER_PERFORM_ACTION, user.uuid, dID) == 0
+				return fetch(:count, CAN_USER_PERFORM_ACTION, user.id, dID) == 0
 			elsif ADMIN_ACTIONS.include?(action)
 				return user.admin
 			else
@@ -157,7 +169,7 @@ module Gatekeeper
 			action_id = get_id_or_create(:actions, action)
 			service_id = get_id_or_create(:services, self.class.to_s.downcase)
 
-			query(LOG_EVENT, user.uuid, type_id, action_id, dID, arg, service_id)
+			query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
 		end
 
 
@@ -168,8 +180,21 @@ module Gatekeeper
 			result = fetch(:id, GET_ID_BY_VALUE, table, value)
 			return result unless result.nil?
 
-			query(INSERT_VALUE, table, value)
+			query(INSERT_VALUE, table, 'name', value)
 			fetch(:id, GET_ID_BY_VALUE, table, value)
+		end
+
+
+		def create_user_by_info(info)
+			id = fetch(:id, GET_ID_FROM_UUID, info[:uuid])
+
+			unless id
+				query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
+				id = fetch(:id, GET_ID_FROM_UUID, info[:uuid])
+			end
+			p info
+			p id
+			User.new(info.merge({:admin => false, :id => id}))
 		end
 
 

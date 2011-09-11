@@ -4,12 +4,14 @@ module Gatekeeper
 		attr_reader :admin
 		attr_reader :name
 		attr_reader :ibutton
+		attr_reader :id
 
-		def initialize(uuid, admin, name, ibutton)
-			@uuid = uuid
-			@admin = admin
-			@name = name
-			@ibutton = ibutton
+		def initialize(config)
+			@uuid    = config[:uuid]
+			@admin   = config[:admin]
+			@name    = config[:name]
+			@ibutton = config[:ibutton]
+			@id      = config[:id]
 		end
 	end
 end
