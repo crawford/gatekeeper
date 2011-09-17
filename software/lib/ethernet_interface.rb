@@ -14,6 +14,7 @@ module Gatekeeper
 
 		def initialize(config)
 			@db = Mysql2::Client.new(config[:database])
+			@door = nil
 		end
 
 		def send_message(address, message)
@@ -30,6 +31,9 @@ module Gatekeeper
 				return
 			end
 
+			HardwareInterface.instance.register_ethernet(ip, self)
+
+			@door = door
 			puts "'#{door['name']}' device connected"
 
 			num = door['dID'].to_i.chr
@@ -38,13 +42,13 @@ module Gatekeeper
 
 		def receive_data(data)
 			puts "Received data from ethernet (#{data.dump}) length: #{data.length}"
-			@receive_callback.call(data, 1)
+			@receive_callback.call(data, @door['dID'])
 		end
 
 		def unbind
 			puts '========================='
-			puts 'Connection to Board Lost'
-			puts '========================='
+			puts "Connection to #{@door['name']} Lost" if     @door
+			puts "Connection to unknown device closed" unless @door
 		end
 
 

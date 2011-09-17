@@ -2,6 +2,7 @@ require 'mysql2'
 require 'singleton'
 require 'message_process'
 require 'zigbee_interface'
+require 'ethernet_pool'
 require 'ldap'
 
 module Gatekeeper
@@ -42,10 +43,15 @@ module Gatekeeper
 
 		def initialize
 			@zigbee = nil
-			@ethernet = nil
+			@ethernet = EthernetPool.new
 			@db = nil
 			@msgid = 0
 			@fibers = {}
+		end
+
+		def register_ethernet(address, ethernet)
+			ethernet.receive_callback = method(:process_message)
+			@ethernet.register_interface(address, ethernet)
 		end
 
 		def setup(db, zigbee)
