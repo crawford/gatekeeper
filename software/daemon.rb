@@ -16,6 +16,7 @@ require 'socket_server'
 require 'web_socket_server'
 require 'hardware_interface'
 require 'ethernet_interface'
+require 'db'
 
 def main
 	servers   = keys_to_symbols(YAML.load_file('config/servers.yml')).freeze
@@ -29,7 +30,8 @@ def main
 	Daemons.run_proc('gatekeeper', :dir_mode => :script, :multiple => false, :log_output => true) do
 		EM.run do
 			# Setup the persistant connections
-			db = Mysql2::Client.new(database)
+			Gatekeeper::DB.config = database
+			Gatekeeper::Ldap.config = ldap
 
 			zigbee = nil
 			EM.connect(servers[:zigzag][:host],
@@ -38,8 +40,7 @@ def main
 				zigbee = z
 			end
 
-			hardware = Gatekeeper::HardwareInterface.instance
-			hardware.setup(db, zigbee)
+			api = Gatekeeper::ApiServer.instance
 
 			# Setup the worker connections
 			EM.start_server(servers[:socket][:interface],

@@ -5,6 +5,7 @@ module Gatekeeper
 		end
 
 		def register_interface(address, interface)
+			p "Registered (#{address}, #{interface})"
 			@pool[address] = interface
 		end
 

@@ -23,16 +23,26 @@ class MessageProcess < Fiber
 			start_timer
 		else
 			success = (payload == SUCCESS)
+			error_type = if success then nil else :failure end
 			error = if success then nil else 'Operation failed' end
+
 			@timer.cancel
-			@callback.call({:success => success, :error => error}) if @callback
+			@callback.call({
+				:success => success,
+				:error_type => error_type,
+				:error => error
+			}) if @callback
 			@cleanup.call if @cleanup
 		end
 	end
 
 	def cancel
 		@timer.cancel
-		@callback.call({:success => false, :error => 'Operation cancelled'}) if @callback
+		@callback.call(
+			{:success => false,
+			 :error_type => :cancelled,
+			 :error => 'Operation cancelled'
+			}) if @callback
 		@cleanup.call if @cleanup
 	end
 
@@ -41,7 +51,11 @@ class MessageProcess < Fiber
 	def start_timer
 		@timer.cancel if @timer
 		@timer = EM::Timer.new(5) do
-			@callback.call({:success => false, :error => 'Operation timed out'}) if @callback
+			@callback.call(
+				{:success => false,
+				 :error_type => :timeout,
+				 :error => 'Operation timed out'
+				}) if @callback
 			@cleanup.call if @cleanup
 		end
 	end

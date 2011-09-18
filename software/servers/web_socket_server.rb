@@ -3,11 +3,9 @@ require 'user'
 
 module Gatekeeper
 	class WebSocketServer < EM::WebSocket::Connection
-		include ApiServer
 
 		def initialize(options)
 			EM::WebSocket::Connection.instance_method(:initialize).bind(self).call(options)
-			super(options)
 
 			@onopen    = method(:onopen)
 			@onmessage = method(:onmessage)
@@ -33,7 +31,7 @@ module Gatekeeper
 			case command
 				when 'AUTH'
 					#TODO: authenticate the user
-					@user = User.new(1, false, "test user", "00000")
+					@user = User.new({:uuid => 'alex', :admin => false, :name => "Test User", :ibutton => "00000", :id => 1})
 					send({:result => true, :error => nil, :id => id}.to_json)
 					send({:states => [
 					       {

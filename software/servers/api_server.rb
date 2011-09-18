@@ -4,8 +4,9 @@ require 'user'
 require 'hardware_interface'
 
 module Gatekeeper
-	module ApiServer
+	class ApiServer
 		include EM::Deferrable
+		include Singleton
 
 		USER_ACTIONS =  [:pop, :unlock, :lock].freeze
 		ADMIN_ACTIONS = [:add_rule, :remove_rule, :add_ibutton, :remove_ibutton].freeze
@@ -18,7 +19,7 @@ module Gatekeeper
 			SELECT COUNT(*) AS count
 			FROM denials
 			WHERE (start_date <= NOW() OR start_date IS NULL) AND
-			(end_date >= NOW() OR end_date IS NULL) AND
+			      (end_date >= NOW() OR end_date IS NULL) AND
 			user_id = %d AND door_id = %d
 		'.freeze
 		GET_ID_BY_VALUE = '
@@ -43,12 +44,12 @@ module Gatekeeper
 
 		# Open a connection to the Gatekeeper database and LDAP
 
-		def initialize(config)
+		def initialize
 			begin
-				@db = Mysql2::Client.new(config[:database])
-				@ldap = Ldap.new(config[:ldap])
+				@db = DB.new
+				@ldap = Ldap.new
 				@last_error = nil
-				@hardware = HardwareInterface.instance
+				@hardware = HardwareInterface.new(self)
 				@@states ||= nil
 				unless @@states
 					doors = fetch_all_doors
@@ -65,6 +66,11 @@ module Gatekeeper
 		end
 
 
+		def register_ethernet(address, ethernet)
+			@hardware.register_ethernet(address, ethernet)
+		end
+
+
 		# Fetch a list of all doors from the database.
 		# Returns the following in an array of hashes:
 		#  - Door Name
@@ -72,7 +78,7 @@ module Gatekeeper
 		#  - Door State
 
 		def fetch_all_doors
-			query(FETCH_ALL_DOORS).each
+			@db.query(FETCH_ALL_DOORS).each
 		end
 
 
@@ -109,8 +115,16 @@ module Gatekeeper
 			raise ArgumentError.new('Invalid user') if user.nil?
 			if can_user_do?(user, action, dID)
 				callback = Proc.new do |result|
-					log_action(user, :success, action, dID, arg)
-					yield result
+					p "====CALLBACK==="
+					p result
+					p user
+					p action
+					p dID
+					p arg
+
+					type = result[:error_type] || :success
+					log_action(user, type, action, dID, arg)
+					yield result if block_given?
 				end
 
 				case action
@@ -127,7 +141,10 @@ module Gatekeeper
 				end
 			else
 				log_action(user.id, :denial, action, dID, arg)
-				yield({:success => false, :error => 'User is not allowed to perform specified action'})
+				yield({
+					:success => false,
+					:error => 'User is not allowed to perform specified action'
+				}) if block_given?
 			end
 		end
 
@@ -144,7 +161,6 @@ module Gatekeeper
 
 		private
 
-
 		# Checks to see if the current user is allowed to
 		# perform the specified action.
 		# Returns a boolean indicating whether or not the user is allowed.
@@ -152,7 +168,7 @@ module Gatekeeper
 		def can_user_do?(user, action, dID)
 			if USER_ACTIONS.include?(action)
 				raise ArgumentError.new('dID must be a fixnum') unless dID.is_a?(Fixnum)
-				return fetch(:count, CAN_USER_PERFORM_ACTION, user.id, dID) == 0
+				return @db.fetch(:count, CAN_USER_PERFORM_ACTION, user.id, dID) == 0
 			elsif ADMIN_ACTIONS.include?(action)
 				return user.admin
 			else
@@ -169,55 +185,32 @@ module Gatekeeper
 			action_id = get_id_or_create(:actions, action)
 			service_id = get_id_or_create(:services, self.class.to_s.downcase)
 
-			query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
+			@db.query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
 		end
-
 
 		# Fetches the id of the value from the specified table.
 		# If the value doesn't exist, create it and return the id.
 
 		def get_id_or_create(table, value)
-			result = fetch(:id, GET_ID_BY_VALUE, table, value)
+			result = @db.fetch(:id, GET_ID_BY_VALUE, table, value)
 			return result unless result.nil?
 
-			query(INSERT_VALUE, table, 'name', value)
-			fetch(:id, GET_ID_BY_VALUE, table, value)
+			@db.query(INSERT_VALUE, table, 'name', value)
+			@db.fetch(:id, GET_ID_BY_VALUE, table, value)
 		end
 
+
+		# Looks up a user from the database or adds a new one
+		# if it doesn't exist.
 
 		def create_user_by_info(info)
-			id = fetch(:id, GET_ID_FROM_UUID, info[:uuid])
+			id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
 
 			unless id
-				query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
-				id = fetch(:id, GET_ID_FROM_UUID, info[:uuid])
+				@db.query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
+				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
 			end
-			p info
-			p id
 			User.new(info.merge({:admin => false, :id => id}))
-		end
-
-
-		# Executes the query with substituted args and returns the specified
-		# attribute from the first result or nil if there are no results.
-
-		def fetch(attribute, query, *args)
-			results = query(query, *args)
-			return if results.size == 0
-
-			out = []
-			results.each(:symbolize_keys => true) do |result|
-				out << result[attribute]
-			end
-			return out.first if out.size == 1
-			out
-		end
-
-
-		# Substitutes the args into the query and executes it.
-
-		def query(query, *args)
-			@db.query(query % args)
 		end
 	end
 end

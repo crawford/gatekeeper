@@ -7,12 +7,10 @@ require 'ldap'
 
 module Gatekeeper
 	class HardwareInterface
-		include Singleton
-
 		FETCH_INTERFACE_FROM_DID = '
 			SELECT interfaces.name AS interface
 			FROM doors, interfaces
-			WHERE doors.interface_id = interfaces.id AND doors.id = %d
+			WHERE doors.interface_id = interfaces.id AND message_address = %d
 		'.freeze
 		FETCH_ACCESS_LIST_FOR_DID = '
 			SELECT users.id AS id
@@ -41,10 +39,12 @@ module Gatekeeper
 		C_DOOR = 'D'.freeze
 
 
-		def initialize
+		def initialize(api_server)
+			@api_server = api_server
 			@zigbee = nil
 			@ethernet = EthernetPool.new
-			@db = nil
+			@db = DB.new
+			@ldap = Ldap.new
 			@msgid = 0
 			@fibers = {}
 		end
@@ -54,8 +54,7 @@ module Gatekeeper
 			@ethernet.register_interface(address, ethernet)
 		end
 
-		def setup(db, zigbee)
-			@db = db
+		def zigbee=(zigbee)
 			@zigbee = zigbee
 			@zigbee.receive_callback = method(:process_message)
 		end
@@ -65,9 +64,9 @@ module Gatekeeper
 			msgid = data[1]
 			payload = data[2..-1]
 
-			puts "CMD: #{cmd.dump}"
-			puts "MSGID: #{msgid.dump}"
-			puts "PAYLOAD: #{payload.dump}"
+			#puts "CMD: #{cmd.dump}"
+			#puts "MSGID: #{msgid.dump}"
+			#puts "PAYLOAD: #{payload.dump}"
 
 			# Check for the trailing newline and remove it if its there
 			if (payload[-1] == "\n")
@@ -86,8 +85,16 @@ module Gatekeeper
 						puts "Got a response for a non-existant fiber (key: #{key})"
 					end
 				when C_IBUTTON
-					puts "IButton (#{payload})"
-					#TODO: process the ibutton
+					door_id = payload[0].ord
+					ibutton = payload[1..-1]
+					puts "IButton (#{ibutton}) from door (#{door_id})"
+
+					info = @ldap.info_for_ibutton(ibutton)
+					p info
+					return unless info
+
+					user = @api_server.create_user_by_info(info)
+					@api_server.do_action(user, :pop, door_id)
 				when C_ERROR
 					puts "An error occured on door #{sender} (#{payload.dump})"
 				else
@@ -143,7 +150,7 @@ module Gatekeeper
 				values = users.collect do |user|
 					"(#{user.uuid}, #{dID})"
 				end
-				db_query(INSERT_INTO_ACCESS_LIST, values.join(','))
+				@db.query(INSERT_INTO_ACCESS_LIST, values.join(','))
 			end
 
 			fiber.callback = callback
@@ -152,7 +159,7 @@ module Gatekeeper
 
 
 		def remove_from_al(dID, users, callback = nil)
-			existing = db_fetch(:id, FETCH_ACCESS_LIST_FOR_DID, dID) || []
+			existing = @db.fetch(:id, FETCH_ACCESS_LIST_FOR_DID, dID) || []
 			existing -= users if users
 
 			# Look up iButtons
@@ -162,7 +169,7 @@ module Gatekeeper
 
 			fiber = MessageProcess.new do
 				# The list was cleared, so add our new iButtons
-				db_query(CLEAR_ACCESS_LIST, dID)
+				@db.query(CLEAR_ACCESS_LIST, dID)
 
 				unless iButtons.empty?
 					send_and_register(Fiber.current, dID, C_ADD, iButtons.join(','))
@@ -172,7 +179,7 @@ module Gatekeeper
 					values = existing.collect do |user|
 						"('#{user.uuid}', '#{dID}')"
 					end
-					db_query(INSERT_INTO_ACCESS_LIST, values.join(','))
+					@db.query(INSERT_INTO_ACCESS_LIST, values.join(','))
 				end
 			end
 
@@ -219,44 +226,23 @@ module Gatekeeper
 
 		def send_message(dID, command, payload)
 			interface = get_interface_for_dID(dID)
+			fail "Unknown dID (#{dID})" unless interface
 			msg = command + @msgid.to_s + payload.to_s + "\n"
 			@msgid += 1
 
 			puts "Sending message(#{msg.dump}) to interface(#{interface})"
-			interface.send_message('ZIGBEE', msg)
+			p dID
+			interface.send_message(dID.to_s, msg)
 		end
 
 
 		# Return the interface object associated with the specified dID
 
 		def get_interface_for_dID(dID)
-			case db_fetch(:interface, FETCH_INTERFACE_FROM_DID, dID)
+			case @db.fetch(:interface, FETCH_INTERFACE_FROM_DID, dID)
 				when 'zigbee' then @zigbee
 				when 'ethernet' then @ethernet
 			end
-		end
-
-
-		# Executes the query with substituted args and returns the specified
-		# attributes or nil if there are no results.
-
-		def db_fetch(attribute, query, *args)
-			results = db_query(query, *args)
-			return if results.size == 0
-
-			out = []
-			results.each(:symbolize_keys => true) do |result|
-				out << result[attribute]
-			end
-			return out.first if out.size == 1
-			out
-		end
-
-
-		# Substitutes the args into the query and executes it.
-
-		def db_query(query, *args)
-			@db.query(query % args)
 		end
 	end
 end

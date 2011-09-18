@@ -3,72 +3,90 @@ require 'user'
 
 LDAP_USER_BASE = 'ou=Users,dc=csh,dc=rit,dc=edu'.freeze
 
-class Ldap
-	def initialize(config)
-		@host     = config[:host]
-		@port     = config[:port]
-		username = config[:username]
-		password = config[:password]
+module Gatekeeper
+	class Ldap
+		@@config = nil
 
-		@ldap = Net::LDAP.new({
-			:host => @host,
-			:port => @port,
-			:auth => {
-				:method   => :simple,
-				:username => username,
-				:password => password
-			},
-			:encryption => :simple_tls
-		})
-
-		unless @ldap.bind
-			@ldap = nil
-			fail 'Could not connect to ldap'
+		def self.config=(config)
+			@@config = config
 		end
-	end
 
-	def info_for_ibutton(ibutton)
-		filter = Net::LDAP::Filter.eq('ibutton', ibutton)
-		perform_info_search(filter)
-	end
+		def initialize(*config)
+			@@config = config.first unless config.empty?
+			fail 'Database must be configured' unless @@config
 
-	def info_for_username(username)
-		filter = Net::LDAP::Filter.eq('uid', username)
-		perform_info_search(filter)
-	end
+			super(@@config)
 
-	def validate_user_credentials(username, password)
-		conn = Net::LDAP.new({
-			:host => @host,
-			:port => @port,
-			:auth => {
-				:method   => :simple,
-				:username => "uid=#{username}, #{LDAP_USER_BASE}",
-				:password => password
-			},
-			:encryption => :simple_tls
-		})
-		p conn.get_operation_result
-		conn.bind
-	end
+			@host     = @@config[:host]
+			@port     = @@config[:port]
+			username = @@config[:username]
+			password = @@config[:password]
 
-	private
+			@ldap = Net::LDAP.new({
+				:host => @host,
+				:port => @port,
+				:auth => {
+					:method   => :simple,
+					:username => username,
+					:password => password
+				},
+				:encryption => :simple_tls
+			})
 
-	def perform_info_search(filter)
-		#TODO: Add admin
-		result = @ldap.search({
-			:base       => LDAP_USER_BASE,
-			:filter     => filter,
-			:attributes => ['ibutton', 'entryUUID', 'cn'],
-			:size       => 1
-		}).first
+			unless @ldap.bind
+				@ldap = nil
+				fail 'Could not connect to ldap'
+			end
+		end
 
-		return nil unless result
+		def info_for_ibutton(ibutton)
+			filter = Net::LDAP::Filter.eq('ibutton', ibutton)
+			perform_info_search(filter)
+		end
 
-		ibutton = result[:ibutton].first
-		uuid    = result[:entryUUID].first
-		cn     = result[:cn].first
+		def info_for_username(username)
+			filter = Net::LDAP::Filter.eq('uid', username)
+			perform_info_search(filter)
+		end
 
-		{:ibutton => ibutton, :uuid => uuid, :name => cn}
+		def info_for_uuid(uuid)
+			filter = Net::LDAP::Filter.eq('entryUUID', uuid)
+			perform_info_search(filter)
+		end
+
+		def validate_user_credentials(username, password)
+			conn = Net::LDAP.new({
+				:host => @host,
+				:port => @port,
+				:auth => {
+					:method   => :simple,
+					:username => "uid=#{username}, #{LDAP_USER_BASE}",
+					:password => password
+				},
+				:encryption => :simple_tls
+			})
+			p conn.get_operation_result
+			conn.bind
+		end
+
+		private
+
+		def perform_info_search(filter)
+			#TODO: Add admin
+			result = @ldap.search({
+				:base       => LDAP_USER_BASE,
+				:filter     => filter,
+				:attributes => ['ibutton', 'entryUUID', 'cn'],
+				:size       => 1
+			}).first
+
+			return nil unless result
+
+			ibutton = result[:ibutton].first
+			uuid    = result[:entryUUID].first
+			cn     = result[:cn].first
+
+			{:ibutton => ibutton, :uuid => uuid, :name => cn}
+		end
 	end
 end

@@ -13,25 +13,26 @@ module Gatekeeper
 		attr_accessor :receive_callback
 
 		def initialize(config)
-			@db = Mysql2::Client.new(config[:database])
+			@db = DB.new
 			@door = nil
 		end
 
-		def send_message(address, message)
-			puts "Ethernet: Sending #{message.dump} to #{address}"
+		def send_message(message)
+			puts "Ethernet: Sending #{message.dump}"
+			send_data(message)
 		end
 
 		def post_init
 			port, ip = Socket.unpack_sockaddr_in(get_peername)
 
-			door = query(FETCH_ETHERNET_DOOR, ip).first
+			door = @db.query(FETCH_ETHERNET_DOOR, ip).first
 			unless door
 				puts "Unknown device connected from #{ip}"
 				close_connection
 				return
 			end
 
-			HardwareInterface.instance.register_ethernet(ip, self)
+			ApiServer.instance.register_ethernet(door['dID'], self)
 
 			@door = door
 			puts "'#{door['name']}' device connected"
@@ -49,16 +50,6 @@ module Gatekeeper
 			puts '========================='
 			puts "Connection to #{@door['name']} Lost" if     @door
 			puts "Connection to unknown device closed" unless @door
-		end
-
-
-		private
-
-
-		# Substitutes the args into the query and executes it.
-
-		def query(query, *args)
-			@db.query(query % args)
 		end
 	end
 end

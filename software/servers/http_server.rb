@@ -5,10 +5,8 @@ require 'api_server'
 
 module Gatekeeper
 	class HttpServer < EM::Connection
-		include ApiServer
 
 		def initialize(config)
-			super(config)
 			@parser = Http::Parser.new
 			@parser.on_headers_complete = proc do
 				begin
