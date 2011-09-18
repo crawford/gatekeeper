@@ -25,16 +25,16 @@
 					<% log.each do |entry| %>
 					<tr>
 						<td>
-							<%= entry['uuid'] %>
+							<%= entry[:name] %>
 						</td>
 						<td>
-							<%= entry['type'] %>
+							<%= entry[:type] %>
 						</td>
 						<td>
-							<%= entry['action'] %>
+							<%= entry[:action] %>
 						</td>
 						<td>
-							<%= entry['datetime'] %>
+							<%= entry[:datetime] %>
 						</td>
 					</tr>
 					<% end %>

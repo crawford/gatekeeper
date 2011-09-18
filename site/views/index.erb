@@ -126,7 +126,7 @@
 
             var sent_actions = {};
 
-            var socket = new WebSocket(<%= "ws://#{hostname}:#{wsport}" %>);
+            var socket = new WebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
             socket.onopen = function(data){
                 socket.send("AUTH:poop");
             }
