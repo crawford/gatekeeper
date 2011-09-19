@@ -159,7 +159,23 @@ module Gatekeeper
 			@hardware.query(id, call)
 		end
 
+
+		# Looks up a user from the database or adds a new one
+		# if it doesn't exist.
+
+		def create_user_by_info(info)
+			id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
+
+			unless id
+				@db.query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
+				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
+			end
+			User.new(info.merge({:admin => false, :id => id}))
+		end
+
+
 		private
+
 
 		# Checks to see if the current user is allowed to
 		# perform the specified action.
@@ -197,20 +213,6 @@ module Gatekeeper
 
 			@db.query(INSERT_VALUE, table, 'name', value)
 			@db.fetch(:id, GET_ID_BY_VALUE, table, value)
-		end
-
-
-		# Looks up a user from the database or adds a new one
-		# if it doesn't exist.
-
-		def create_user_by_info(info)
-			id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
-
-			unless id
-				@db.query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
-				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
-			end
-			User.new(info.merge({:admin => false, :id => id}))
 		end
 	end
 end

@@ -21,7 +21,7 @@ worker_processes 1
 
 # Help ensure your application will always spawn in the symlinked
 # "current" directory that Capistrano sets up.
-working_directory "/var/gatekeeper/current/site" # available in 0.94.0+
+working_directory "~/gatekeeper/software/site" # available in 0.94.0+
 
 # listen on both a Unix domain socket and a TCP port,
 # we use a shorter backlog for quicker failover when busy
@@ -32,7 +32,7 @@ listen "/tmp/.sock", :backlog => 64
 timeout 30
 
 # feel free to point this anywhere accessible on the filesystem
-pid "/var/gatekeeper/shared/pids/unicorn.pid"
+pid "/var/tmp/unicorn.pid"
 
 # By default, the Unicorn logger will write to stderr.
 # Additionally, ome applications/frameworks log to stderr or stdout,

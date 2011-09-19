@@ -1,13 +1,18 @@
 require 'sinatra'
 require 'mysql2'
 require 'socket'
+require 'yaml'
+
+$LOAD_PATH.unshift('config')
 
 #TODO - this is just disgusting...
-$LOAD_PATH << '../software/lib'
-$LOAD_PATH << '../software/models'
+$LOAD_PATH << '../lib'
+$LOAD_PATH << '../models'
 
 require 'ldap'
 require 'user'
+
+database = YAML.load_file('config/database.yml')
 
 class Test < Sinatra::Base
 	FETCH_LOG = '
@@ -33,12 +38,12 @@ class Test < Sinatra::Base
 	end
 
 	get '/log/:door' do
-		db = Mysql2::Client.new({:username => 'api', :password => '123', :database => 'gatekeeper', :host => 'localhost'})
+		db = Mysql2::Client.new({:username => 'username', :password => 'password', :database => 'gatekeeper', :host => 'localhost'})
 		ldap = Gatekeeper::Ldap.new({
-			:username => 'cn=gatekeeper,ou=Apps,dc=csh,dc=rit,dc=edu',
-			:password => 'White298^down',
-			:host => 'ldap.csh.rit.edu',
-			:port => '636'
+			:username => 'username',
+			:password => 'password',
+			:host => 'host',
+			:port => 'port'
 		})
 
 		door = db.query(FETCH_DOOR_NAME % params[:door].to_i).first

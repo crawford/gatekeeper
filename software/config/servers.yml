@@ -1,16 +1,16 @@
-control:
-  port     : 12346
-  interface: localhost
 socket:
-  port     : 12345
-  interface: 0.0.0.0
+  port     :
+  interface:
 websocket:
-  port     : 8080
-  interface: 0.0.0.0
+  port     :
+  interface:
 http:
-  port     : 80
-  interface: 0.0.0.0
+  port     :
+  interface:
+ethernet:
+  port     :
+  interface:
 
 zigzag:
-  host : localhost
-  port : 1111
+  host :
+  port :

@@ -26,6 +26,8 @@ namespace :deploy do
 
 	task :copy_config, :roles => :app do
 		run "cp #{shared_path}/database.yml #{release_path}/service/config/database.yml"
+		run "cp #{shared_path}/servers.yml #{release_path}/service/config/servers.yml"
+		run "cp #{shared_path}/ldap.yml #{release_path}/service/config/ldap.yml"
 	end
 
 	task :restart_unicorn, :roles => :app do

@@ -3,13 +3,13 @@
 Dir.chdir(File.dirname(__FILE__))
 $LOAD_PATH.unshift(".")
 
-require 'lib/misc_helpers'
+require '../lib/misc_helpers'
 require 'rubygems'
 require 'eventmachine'
 require 'yaml'
 require 'daemons'
 
-add_to_loadpath("config", "servers", "lib", "models")
+add_to_loadpath("config", "servers", "../lib", "../models")
 
 require 'http_server'
 require 'socket_server'
