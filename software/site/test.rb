@@ -1,18 +1,19 @@
+Dir.chdir(File.dirname(__FILE__))
+$LOAD_PATH.unshift(".")
+
+require '../lib/misc_helpers'
 require 'sinatra'
 require 'mysql2'
 require 'socket'
 require 'yaml'
 
-$LOAD_PATH.unshift('config')
-
-#TODO - this is just disgusting...
-$LOAD_PATH << '../lib'
-$LOAD_PATH << '../models'
+add_to_loadpath("../lib", "../models")
 
 require 'ldap'
 require 'user'
 
-database = YAML.load_file('config/database.yml')
+database = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+ldap     = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
 
 class Test < Sinatra::Base
 	FETCH_LOG = '
@@ -38,13 +39,8 @@ class Test < Sinatra::Base
 	end
 
 	get '/log/:door' do
-		db = Mysql2::Client.new({:username => 'username', :password => 'password', :database => 'gatekeeper', :host => 'localhost'})
-		ldap = Gatekeeper::Ldap.new({
-			:username => 'username',
-			:password => 'password',
-			:host => 'host',
-			:port => 'port'
-		})
+		db = Mysql2::Client.new(database)
+		ldap = Gatekeeper::Ldap.new(ldap)
 
 		door = db.query(FETCH_DOOR_NAME % params[:door].to_i).first
 		log = db.query(FETCH_LOG % door['message_address'].to_i).collect do |entry|
