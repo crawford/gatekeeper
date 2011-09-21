@@ -5,7 +5,9 @@ class MessageProcess < Fiber
 	attr_accessor :callback
 	attr_accessor :cleanup
 
-	SUCCESS = 'S'.freeze
+	SUCCESS  = 'S'.freeze
+	LOCKED   = 'L'.freeze
+	UNLOCKED = 'U'.freeze
 
 	def initialize(&blk)
 		if block_given?
@@ -22,7 +24,7 @@ class MessageProcess < Fiber
 		if alive?
 			start_timer
 		else
-			success = (payload == SUCCESS)
+			success = (payload == SUCCESS and payload == LOCKED and payload == UNLOCKED)
 			error_type = if success then nil else :failure end
 			error = if success then nil else 'Operation failed' end
 
