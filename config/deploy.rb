@@ -13,10 +13,8 @@ set :user, "zuul"
 
 namespace :deploy do
 	task :fix_directories, :roles => :app do
-		run "mkdir -p /tmp/gatekeeper/service"
-		run "mkdir -p /tmp/gatekeeper/site"
-		run "mv #{release_path}/software/* /tmp/gatekeeper/service"
-		run "mv #{release_path}/site/* /tmp/gatekeeper/site"
+		run "mkdir -p /tmp/gatekeeper/software"
+		run "mv #{release_path}/software/* /tmp/gatekeeper/software"
 		run "rm -rf #{release_path}/*"
 		run "rm -rf #{release_path}/.git"
 		run "rm -f #{release_path}/.gitignore"
@@ -25,14 +23,19 @@ namespace :deploy do
 	end
 
 	task :copy_config, :roles => :app do
-		run "cp #{shared_path}/database.yml #{release_path}/service/config/database.yml"
-		run "cp #{shared_path}/servers.yml #{release_path}/service/config/servers.yml"
-		run "cp #{shared_path}/ldap.yml #{release_path}/service/config/ldap.yml"
+		run "cp #{shared_path}/database.yml #{release_path}/software/config/database.yml"
+		run "cp #{shared_path}/servers.yml #{release_path}/software/config/servers.yml"
+		run "cp #{shared_path}/ldap.yml #{release_path}/software/config/ldap.yml"
 	end
 
 	task :restart_unicorn, :roles => :app do
-		run "pkill unicorn"
-		run "unicorn -c #{release_path}/site/config/unicorn.rb -D"
+		if File.exists?('/var/tmp/unicorn.pid')
+			File.open('/var/tmp/unicorn.pid', 'r') do |file|
+				pid = file.read.to_i
+				run "kill #{pid}"
+			end
+		end
+		run "source /home/zuul/.zshrc; unicorn -c #{release_path}/software/site/config/unicorn.rb -D"
 	end
 end
 
@@ -40,7 +43,7 @@ namespace :bundler do
 	task :create_symlink, :roles => :app do
 		shared_dir = File.join(shared_path, 'bundle')
 		release_dir = File.join(release_path, '.bundle')
-		run("mkdir -p #{shared_dir} && ln -s #{shared_dir} #{release_dir}")
+		run "mkdir -p #{shared_dir} && ln -s #{shared_dir} #{release_dir}"
 	end
 
 	task :install, :roles => :app do
@@ -61,7 +64,7 @@ namespace :bundler do
 	end
 end
 
-after 'deploy', 'deploy:fix_directories'
+#after 'deploy', 'deploy:fix_directories'
 after 'deploy', 'deploy:copy_config'
 after 'deploy', 'deploy:restart_unicorn'
 #after "deploy:rollback:revision", "bundler:install"
