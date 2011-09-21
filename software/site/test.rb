@@ -12,10 +12,10 @@ add_to_loadpath("../lib", "../models")
 require 'ldap'
 require 'user'
 
-database = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
-ldap     = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
-
 class Test < Sinatra::Base
+	database = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+	ldap     = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+
 	FETCH_LOG = '
 		SELECT users.uuid, types.name as type, actions.name as action, events.datetime
 		FROM users, types, actions, events
