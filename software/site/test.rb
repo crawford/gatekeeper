@@ -13,8 +13,8 @@ require 'ldap'
 require 'user'
 
 class Test < Sinatra::Base
-	database = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
-	ldap     = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+	@database = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+	@ldap     = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
 
 	FETCH_LOG = '
 		SELECT users.uuid, types.name as type, actions.name as action, events.datetime
@@ -39,8 +39,8 @@ class Test < Sinatra::Base
 	end
 
 	get '/log/:door' do
-		db = Mysql2::Client.new(database)
-		ldap = Gatekeeper::Ldap.new(ldap)
+		db = Mysql2::Client.new(@database)
+		ldap = Gatekeeper::Ldap.new(@ldap)
 
 		door = db.query(FETCH_DOOR_NAME % params[:door].to_i).first
 		log = db.query(FETCH_LOG % door['message_address'].to_i).collect do |entry|
