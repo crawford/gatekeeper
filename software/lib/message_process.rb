@@ -24,7 +24,10 @@ class MessageProcess < Fiber
 		if alive?
 			start_timer
 		else
-			success = (payload == SUCCESS and payload == LOCKED and payload == UNLOCKED)
+			dID    = payload[0]
+			result = payload[1]
+
+			success = (payload == SUCCESS or payload == LOCKED or payload == UNLOCKED)
 			error_type = if success then nil else :failure end
 			error = if success then nil else 'Operation failed' end
 
