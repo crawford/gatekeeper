@@ -41,6 +41,7 @@ def main
 			end
 
 			api = Gatekeeper::ApiServer.instance
+			api.zigbee = zigbee
 
 			# Setup the worker connections
 			EM.start_server(servers[:socket][:interface],

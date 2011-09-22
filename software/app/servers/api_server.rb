@@ -70,6 +70,10 @@ module Gatekeeper
 			@hardware.register_ethernet(address, ethernet)
 		end
 
+		def zigbee=(zigbee)
+			@hardware.zigbee = zigbee
+		end
+
 
 		# Fetch a list of all doors from the database.
 		# Returns the following in an array of hashes:
