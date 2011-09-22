@@ -50,12 +50,15 @@ class Test < Sinatra::Base
 
 		log = db.query(FETCH_LOG % door['message_address'].to_i).collect do |entry|
 			user = ldap.info_for_uuid(entry['uuid'])
+			next unless user
+
 			{:name => user[:name],
 			 :type => entry['type'],
 			 :action => entry['action'],
 			 :datetime => entry['datetime']
 			}
 		end
+		log.compact!
 
 		erb :log, :locals => {:log => log, :door => door['name']}
 	end
