@@ -32,23 +32,23 @@ module Gatekeeper
 				return
 			end
 
-			ApiServer.instance.register_ethernet(door['dID'], self)
+			ApiServer.instance.register_ethernet(door[:dID], self)
 
 			@door = door
-			puts "'#{door['name']}' device connected"
+			puts "'#{door[:name]}' device connected"
 
-			num = door['dID'].to_i.chr
+			num = door[:dID].to_i.chr
 			send_data("D\001#{num}\n")
 		end
 
 		def receive_data(data)
 			puts "Received data from ethernet (#{data.dump}) length: #{data.length}"
-			@receive_callback.call(data, @door['dID'])
+			@receive_callback.call(data, @door[:dID])
 		end
 
 		def unbind
 			puts '========================='
-			puts "Connection to #{@door['name']} Lost" if     @door
+			puts "Connection to #{@door[:name]} Lost" if     @door
 			puts "Connection to unknown device closed" unless @door
 		end
 	end

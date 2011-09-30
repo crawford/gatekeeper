@@ -15,6 +15,7 @@ module Gatekeeper
 			fail 'Database must be configured' unless @@config
 
 			super(@@config)
+			query_options.merge!(:symbolize_keys => true)
 		end
 
 
@@ -26,7 +27,7 @@ module Gatekeeper
 			return if results.size == 0
 
 			out = []
-			results.each(:symbolize_keys => true) do |result|
+			results.each do |result|
 				out << result[attribute]
 			end
 			return out.first if out.size == 1
