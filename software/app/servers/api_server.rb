@@ -52,7 +52,7 @@ module Gatekeeper
 				@hardware = HardwareInterface.new(self)
 				@@states ||= nil
 				unless @@states
-					doors = fetch_all_doors
+					doors = fetch_all_doors()
 					doors.each do |door|
 						#TODO: update the states here
 						p door
@@ -82,7 +82,13 @@ module Gatekeeper
 		#  - Door State
 
 		def fetch_all_doors
-			@db.query(FETCH_ALL_DOORS).each
+			@db.query(FETCH_ALL_DOORS).collect do |door|
+				if @@states.has_key?(door[:id])
+					door.merge(@@states[door[:id]])
+				else
+					door
+				end
+			end
 		end
 
 
