@@ -13,7 +13,7 @@ module Gatekeeper
 
 		def initialize(*config)
 			@@config = config.first unless config.empty?
-			fail 'Database must be configured' unless @@config
+			fail 'LDAP must be configured' unless @@config
 
 			super(@@config)
 
