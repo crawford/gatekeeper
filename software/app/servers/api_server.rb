@@ -52,7 +52,8 @@ module Gatekeeper
 				@hardware = HardwareInterface.new(self)
 				@@states ||= nil
 				unless @@states
-					doors = fetch_all_doors()
+					@@states = Hash.new
+					doors = fetch_all_doors
 					doors.each do |door|
 						#TODO: update the states here
 						p door
@@ -86,6 +87,7 @@ module Gatekeeper
 				if @@states.has_key?(door[:id])
 					door.merge(@@states[door[:id]])
 				else
+					door[:state] = 'unlocked'
 					door
 				end
 			end

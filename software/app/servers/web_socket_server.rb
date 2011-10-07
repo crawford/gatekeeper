@@ -33,25 +33,14 @@ module Gatekeeper
 					@user = User.new({:uuid => 'alex', :admin => false, :name => "Test User", :ibutton => "00000", :id => 1})
 					send({:result => true, :error => nil, :id => id}.to_json)
 
-					send({:states => [
-					       {
-					         :door_id => 1,
-					         :state => 'unlocked',
-					         :door_name => 'Research Room',
-					         :lock => true,
-					         :unlock => false,
-					         :pop => true
-					       },
-					       {
-					         :door_id => 2,
-					         :state => 'locked',
-					         :door_name => 'Poop Room',
-					         :lock => true,
-					         :unlock => true,
-					         :pop => true
-					       }
-					       ]
-					    }.to_json)
+					doors = ApiServer.instance.fetch_all_doors
+					doors.each do |door|
+						# This should actually be checked
+						door[:pop]    = true
+						door[:unlock] = false
+						door[:lock]   = true
+					end
+					send({:states => doors}.to_json)
 				when 'POP'
 					ApiServer.instance.do_action(@user, :pop, payload.to_i) do |result|
 						send(result.merge({:id => id}).to_json)

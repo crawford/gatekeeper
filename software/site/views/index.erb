@@ -166,35 +166,33 @@
                 if($('.door').length == 0){
                     var doors = $('#door_container');
                     for(var i = 0; i < states.length; i++){
-                        var door = $('<div class="door" id="' + states[i].door_id + '"></div>');
+                        var door = $('<div class="door" id="' + states[i].id + '"></div>');
 
                         if(states[i].state == 'unlocked'){
                             door.addClass('open');
                         } else if(states[i].state == 'locked'){
                             door.addClass('closed');
-                        } else if(states[i].state == 'unknown'){
-                            door.addClass('unknown');
                         } else {
-                            // something here...
+                            door.addClass('unknown');
                         }
 
-                        door.append('<div class="door-name">' + states[i].door_name + '</div>');
+                        door.append('<div class="door-name">' + states[i].name + '</div>');
 
                         door.append('<div class="door-message"></div>');
 
-                        var pop = $('<input type="button" class="action-button" door_action="pop" door_id="' + states[i].door_id + '" value="Pop">'),
-                            unlock = $('<input type="button" class="action-button" door_action="unlock" door_id="' + states[i].door_id + '" value="Unlock">'),
-                            lock = $('<input type="button" class="action-button" door_action="lock" door_id="' + states[i].door_id + '" value="Lock">');
+                        var pop = $('<input type="button" class="action-button" door_action="pop" door_id="' + states[i].id + '" value="Pop">'),
+                            unlock = $('<input type="button" class="action-button" door_action="unlock" door_id="' + states[i].id + '" value="Unlock">'),
+                            lock = $('<input type="button" class="action-button" door_action="lock" door_id="' + states[i].id + '" value="Lock">');
 
-                        if(states[i].pop == false){
+                        if(states[i].pop != true){
                             pop.attr('disabled', true);
                         }
 
-                        if(states[i].unlock == false){
+                        if(states[i].unlock != true){
                             unlock.attr('disabled', true);
                         }
 
-                        if(states[i].lock == false){
+                        if(states[i].lock != true){
                             lock.attr('disabled', true);
                         }
 
@@ -213,7 +211,7 @@
 
                 } else {
                     for(var i = 0; i < states.length; i++){
-                        var door = $('#' + states[i].door_id);
+                        var door = $('#' + states[i].id);
 
                         door.attr('class', 'door');
 
@@ -236,7 +234,7 @@
 
                 var callback = function(response){
                     var data = sent_actions[response.id];
-                    var door = $('#' + data.door_id);
+                    var door = $('#' + data.id);
 
                     if(response.success == true){ 
                         door.attr('class', 'door');
@@ -258,7 +256,7 @@
                 }
 
 
-                sent_actions[id] = {door_id: element.attr('door_id'), action: callback};
+                sent_actions[id] = {id: element.attr('door_id'), action: callback};
 
                 socket.send("POP:" + element.attr('door_id') + ':' + id);
             }
@@ -267,7 +265,7 @@
                 var id = (new Date()).getTime();
                 var callback = function(response){
                     var data = sent_actions[response.id];
-                    var door = $('#' + data.door_id);
+                    var door = $('#' + data.id);
                     if(response.error == null){
                         door.attr('class', 'door');
                         door.addClass('open');
@@ -282,7 +280,7 @@
                 }
 
 
-                sent_actions[id] = {door_id: element.attr('door_id'), action: callback};
+                sent_actions[id] = {id: element.attr('door_id'), action: callback};
 
                 socket.send("UNLOCK:" + element.attr('door_id') + ':' + id);
             }
@@ -291,7 +289,7 @@
                 var id = (new Date()).getTime();
                 var callback = function(response){
                     var data = sent_actions[response.id];
-                    var door = $('#' + data.door_id);
+                    var door = $('#' + data.id);
 
                     if(response.error == null){
                         door.attr('class', 'door');
@@ -306,7 +304,7 @@
 
                 }
 
-                sent_actions[id] = {door_id: element.attr('door_id'), action: callback};
+                sent_actions[id] = {id: element.attr('door_id'), action: callback};
 
                 socket.send("LOCK:" + element.attr('door_id') + ':' + id);
             }
