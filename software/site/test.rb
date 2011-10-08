@@ -49,13 +49,20 @@ class Test < Sinatra::Base
 		ldap = Gatekeeper::Ldap.new
 		dID  = params[:door].to_i
 
-		door_name = db.fetch(:name, FETCH_DOOR_NAME % dID)
+		door_name = db.fetch(:name, FETCH_DOOR_NAME, dID)
 		redirect '/' unless door_name
 
-		log = db.query(FETCH_LOG % dID).collect do |entry|
-			#TODO: This is slow
-			user   = ldap.info_for_uuid(entry[:uuid])
-			user ||= {:name => entry[:uuid]}
+		user_cache = Hash.new
+		log = db.query(FETCH_LOG, dID).collect do |entry|
+			#TODO: This could be faster (one large query)
+			if user_cache.has_key?(entry[:uuid])
+				user = user_cache[entry[:uuid]]
+			else
+				user   = ldap.info_for_uuid(entry[:uuid])
+				user ||= {:name => entry[:uuid]}
+
+				user_cache[entry[:uuid]] = user
+			end
 
 			{:name => user[:name],
 			 :type => entry[:type],
