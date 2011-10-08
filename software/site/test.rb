@@ -3,19 +3,22 @@ $LOAD_PATH.unshift(".")
 
 require '../lib/misc_helpers'
 require 'sinatra'
-require 'mysql2'
 require 'socket'
 require 'yaml'
 
 add_to_loadpath("../lib", "../models")
 
+require 'db'
 require 'ldap'
 require 'user'
 
 class Test < Sinatra::Base
 	def initialize
-		@db_config   = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
-		@ldap_config = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+		db_config   = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+		ldap_config = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+
+		Gatekeeper::DB.config = db_config
+		Gatekeeper::Ldap.config = ldap_config
 		super
 	end
 
@@ -23,13 +26,13 @@ class Test < Sinatra::Base
 		SELECT users.uuid, types.name as type, actions.name as action, events.datetime
 		FROM users, types, actions, events
 		WHERE action_did = %d AND
-			  user_id = users.id AND
-			  type_id = types.id AND
-			  action_id = actions.id
+		      user_id = users.id AND
+		      type_id = types.id AND
+		      action_id = actions.id
 		ORDER BY events.datetime DESC
 	'.freeze
 	FETCH_DOOR_NAME = '
-		SELECT name, message_address
+		SELECT name
 		FROM doors
 		WHERE id = %d
 	'.freeze
@@ -42,25 +45,27 @@ class Test < Sinatra::Base
 	end
 
 	get '/log/:door' do
-		db = Mysql2::Client.new(@db_config)
-		ldap = Gatekeeper::Ldap.new(@ldap_config)
+		db   = Gatekeeper::DB.new
+		ldap = Gatekeeper::Ldap.new
+		dID  = params[:door].to_i
 
-		door = db.query(FETCH_DOOR_NAME % params[:door].to_i).first
-		redirect '/' unless door
+		door_name = db.fetch(:name, FETCH_DOOR_NAME % dID)
+		redirect '/' unless door_name
 
-		log = db.query(FETCH_LOG % door['message_address'].to_i).collect do |entry|
-			user = ldap.info_for_uuid(entry['uuid'])
-			next unless user
+		log = db.query(FETCH_LOG % dID).collect do |entry|
+			#TODO: This is slow
+			user   = ldap.info_for_uuid(entry[:uuid])
+			user ||= {:name => entry[:uuid]}
 
 			{:name => user[:name],
-			 :type => entry['type'],
-			 :action => entry['action'],
-			 :datetime => entry['datetime']
+			 :type => entry[:type],
+			 :action => entry[:action],
+			 :datetime => entry[:datetime]
 			}
 		end
 		log.compact!
 
-		erb :log, :locals => {:log => log, :door => door['name']}
+		erb :log, :locals => {:log => log, :door => door_name}
 	end
 
 	not_found do

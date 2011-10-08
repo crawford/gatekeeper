@@ -85,13 +85,16 @@ module Gatekeeper
 						puts "Got a response for a non-existant fiber (key: #{key})"
 					end
 				when C_IBUTTON
-					door_id = payload[0].ord
-					ibutton = payload[1..-1]
-					puts "IButton (#{ibutton}) from door (#{door_id})"
+					door_addr = payload[0].ord
+					ibutton   = payload[1..-1]
+					puts "IButton (#{ibutton}) from door (#{door_addr})"
 
 					info = @ldap.info_for_ibutton(ibutton)
 					p info
 					return unless info
+
+					door_id = @api_server.did_for_daddr(door_addr)
+					return unless door_id
 
 					user = @api_server.create_user_by_info(info)
 					@api_server.do_action(user, :pop, door_id)

@@ -15,6 +15,11 @@ module Gatekeeper
 			SELECT doors.id, doors.name
 			FROM doors
 		'.freeze
+		FETCH_DID_FOR_DOOR_ADDR = '
+			SELECT id
+			FROM doors
+			WHERE message_address = %d
+		'.freeze
 		CAN_USER_PERFORM_ACTION = '
 			SELECT COUNT(*) AS count
 			FROM denials
@@ -183,6 +188,18 @@ module Gatekeeper
 				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
 			end
 			User.new(info.merge({:admin => false, :id => id}))
+		end
+
+
+		# Translate the door address into the door id
+
+		def did_for_daddr(door_addr)
+			door_id = @db.fetch(:id, FETCH_DID_FOR_DOOR_ADDR, door_addr)
+			unless door_id
+				puts "Invalid door address received through C_IBUTTON"
+				return nil
+			end
+			door_id
 		end
 
 
