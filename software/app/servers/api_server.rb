@@ -152,7 +152,7 @@ module Gatekeeper
 						@hardware.remove_from_al(dID, arg, callback)
 				end
 			else
-				log_action(user.id, :denial, action, dID, arg)
+				log_action(user, :denial, action, dID, arg)
 				yield({
 					:success => false,
 					:error => 'User is not allowed to perform specified action'
