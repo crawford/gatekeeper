@@ -51,6 +51,15 @@ class MessageProcess < Fiber
 		@cleanup.call if @cleanup
 	end
 
+	def fail
+		@timer.cancel
+		@callback.call(
+			{:success => false,
+			 :error_type => :failure,
+			 :error => 'Operation failed'
+			}) if @callback
+	end
+
 	private
 
 	def start_timer

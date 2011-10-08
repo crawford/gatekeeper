@@ -200,9 +200,12 @@ module Gatekeeper
 
 		def send_and_register(fiber, dID, command, payload = '')
 			key = "#{dID},#{@msgid.to_s}"
-			register_fiber(fiber, key)
 
-			send_message(dID, command, payload)
+			if send_message(dID, command, payload)
+				register_fiber(fiber, key)
+			else
+				fiber.fail
+			end
 		end
 
 
@@ -226,13 +229,18 @@ module Gatekeeper
 
 		def send_message(dID, command, payload)
 			interface = get_interface_for_dID(dID)
-			fail "Unknown dID (#{dID})" unless interface
+			unless interface
+				puts "No interface for dID (#{dID})"
+				return false
+			end
 			msg = command + @msgid.to_s + payload.to_s + "\n"
 			@msgid += 1
 
 			puts "Sending message(#{msg.dump}) to interface(#{interface})"
 			p dID
 			interface.send_message(dID.to_s, msg)
+
+			return true
 		end
 
 
