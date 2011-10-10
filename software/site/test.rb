@@ -13,13 +13,12 @@ require 'ldap'
 require 'user'
 
 class Test < Sinatra::Base
-	def initialize
+	def before
 		db_config   = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
 		ldap_config = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
 
 		Gatekeeper::DB.config = db_config
 		Gatekeeper::Ldap.config = ldap_config
-		super
 	end
 
 	FETCH_LOG = '
