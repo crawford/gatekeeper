@@ -1,6 +1,6 @@
+#include <avr/io.h>
 #include "leds.h"
 #include "utils.h"
-#include <avr/io.h>
 
 void _isr_timer();
 
