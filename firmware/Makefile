@@ -1,5 +1,5 @@
 CC=avr-gcc
-CFLAGS=-g -Wall -Os -mmcu=atmega168
+CFLAGS=-g -Wall -Os -std=c99 -mmcu=atmega168
 OBJ2HEX=avr-objcopy
 TARGET=gatekeeper
 
@@ -9,7 +9,7 @@ program: $(TARGET).hex
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-$(TARGET).obj: leds.o motor.o main.o onewire.o
+$(TARGET).obj: leds.o motor.o main.o onewire.o ibutton.o
 	$(CC) $(CFLAGS) $? -o $@
 
 %.hex: %.obj
