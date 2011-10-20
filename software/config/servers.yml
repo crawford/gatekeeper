@@ -1,6 +1,3 @@
-socket:
-  port     :
-  interface:
 websocket:
   port     :
   interface:

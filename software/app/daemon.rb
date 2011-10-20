@@ -44,11 +44,6 @@ def main
 			api.zigbee = zigbee
 
 			# Setup the worker connections
-			EM.start_server(servers[:socket][:interface],
-			                servers[:socket][:port],
-			                Gatekeeper::SocketServer,
-			                servers[:socket].merge(creds))
-
 			EM.start_server(servers[:http][:interface],
 			                servers[:http][:port],
 			                Gatekeeper::HttpServer,
