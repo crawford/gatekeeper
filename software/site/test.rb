@@ -13,14 +13,6 @@ require 'ldap'
 require 'user'
 
 class Test < Sinatra::Base
-	def before
-		db_config   = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
-		ldap_config = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
-
-		Gatekeeper::DB.config = db_config
-		Gatekeeper::Ldap.config = ldap_config
-	end
-
 	FETCH_LOG = '
 		SELECT users.uuid, types.name as type, actions.name as action, events.datetime
 		FROM users, types, actions, events
@@ -35,6 +27,14 @@ class Test < Sinatra::Base
 		FROM doors
 		WHERE id = %d
 	'.freeze
+
+	before do
+		db_config   = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+		ldap_config = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+
+		Gatekeeper::DB.config = db_config
+		Gatekeeper::Ldap.config = ldap_config
+	end
 
 	get '/' do
 		hostname = Socket.gethostbyname(Socket.gethostname).first
