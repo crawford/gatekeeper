@@ -3,6 +3,8 @@ CFLAGS=-g -Wall -Os -std=c99 -mmcu=atmega168
 OBJ2HEX=avr-objcopy
 TARGET=gatekeeper
 
+all: $(TARGET).hex
+
 program: $(TARGET).hex
 	cp $(TARGET).hex /media/shared
 
