@@ -5,6 +5,7 @@ require '../lib/misc_helpers'
 require 'sinatra'
 require 'socket'
 require 'yaml'
+require 'rack-webauth'
 
 add_to_loadpath("../lib", "../models")
 
@@ -12,7 +13,9 @@ require 'db'
 require 'ldap'
 require 'user'
 
-class Test < Sinatra::Base
+class Main < Sinatra::Base
+	include(Rack::Webauth::Helpers)
+
 	FETCH_LOG = '
 		SELECT users.uuid, types.name as type, actions.name as action, events.datetime
 		FROM users, types, actions, events
@@ -40,7 +43,7 @@ class Test < Sinatra::Base
 		hostname = Socket.gethostbyname(Socket.gethostname).first
 		#TODO - Look this up
 		wsport = 8080
-		erb :index, :locals => {:hostname => hostname, :wsport => wsport}
+		erb :index, :locals => {:hostname => hostname, :wsport => wsport, :username => webauth.login}
 	end
 
 	get '/log/:door' do

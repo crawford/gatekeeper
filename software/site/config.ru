@@ -1,6 +1,11 @@
 $LOAD_PATH.unshift(Dir.pwd)
-require 'test'
+require 'main'
+require 'rack-webauth/test'
 
+#TODO: Vendor the rack-webauth gem (uses String#any? instead of String#empty?)
+use Rack::Webauth::Test, :user => "abcrawf"
+
+use Rack::Webauth
 use Rack::ShowExceptions
 
-run Test.new
+run Main.new
