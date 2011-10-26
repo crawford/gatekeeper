@@ -6,6 +6,8 @@ require 'sinatra'
 require 'socket'
 require 'yaml'
 require 'rack-webauth'
+require 'redis'
+require 'uuid'
 
 add_to_loadpath("../lib", "../models")
 
@@ -31,19 +33,40 @@ class Main < Sinatra::Base
 		WHERE id = %d
 	'.freeze
 
+	KEY_EXPIRE_TIME = 900.freeze # 15 minutes
+
 	before do
-		db_config   = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
-		ldap_config = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+		db_config    = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
+		ldap_config  = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+		redis_config = keys_to_symbols(YAML.load_file('config/redis.yml')).freeze
 
 		Gatekeeper::DB.config = db_config
 		Gatekeeper::Ldap.config = ldap_config
+
+		@redis = Redis.new(redis_config)
+
+		@uuid = UUID.new
 	end
 
 	get '/' do
 		hostname = Socket.gethostbyname(Socket.gethostname).first
 		#TODO - Look this up
 		wsport = 8080
-		erb :index, :locals => {:hostname => hostname, :wsport => wsport, :username => webauth.login}
+
+		# Grab or generate the users secret key so they auth over websockets
+		if @redis.exists(webauth.login)
+			key = @redis.get(webauth.login)
+		else
+			key = @uuid.generate
+			@redis.set(webauth.login, key)
+			@redis.set(key, webauth.login)
+		end
+
+		# Push back the expiration time for the key
+		@redis.expire(webauth.login, KEY_EXPIRE_TIME)
+		@redis.expire(key, KEY_EXPIRE_TIME)
+
+		erb :index, :locals => {:hostname => hostname, :wsport => wsport, :key => key}
 	end
 
 	get '/log/:door' do
