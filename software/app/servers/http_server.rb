@@ -1,4 +1,5 @@
 #TODO: super fast hack code
+#TODO: ibutton authentication no longer supported
 
 require 'http_parser'
 require 'api_server'

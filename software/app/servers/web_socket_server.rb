@@ -11,7 +11,6 @@ module Gatekeeper
 			@onerror   = method(:onerror)
 			@onclose   = method(:onclose)
 
-			#@user = User.new(1, false, "test", "000")
 			@user = nil
 		end
 
@@ -29,8 +28,12 @@ module Gatekeeper
 
 			case command
 				when 'AUTH'
-					#TODO: authenticate the user
-					@user = User.new({:uuid => 'alex', :admin => false, :name => "Test User", :ibutton => "00000", :id => 1})
+					@user = ApiServer.instance.authenticate_user(payload)
+					unless @user
+						send({:result => false, :error => "Invalid user key", :id => id}.to_json)
+						return
+					end
+
 					send({:result => true, :error => nil, :id => id}.to_json)
 
 					doors = ApiServer.instance.fetch_all_doors

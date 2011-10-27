@@ -53,6 +53,7 @@ module Gatekeeper
 			begin
 				@db = DB.new
 				@ldap = Ldap.new
+				@redis = Redis.current
 				@last_error = nil
 				@hardware = HardwareInterface.new(self)
 				@@states ||= nil
@@ -105,10 +106,14 @@ module Gatekeeper
 
 		def authenticate_user(*args)
 			case args.size
-				# (iButtonID)
+				# (Redis userkey)
 				when 1
-					info = @ldap.info_for_ibutton(args[0])
+					username = @redis.get(args[0])
+					return nil unless username
+
+					info = @ldap.info_for_username(username)
 					return create_user_by_info(info)
+				# (Username, password)
 				when 2
 					username = args[0]
 					password = args[1]

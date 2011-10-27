@@ -8,11 +8,11 @@ require 'rubygems'
 require 'eventmachine'
 require 'yaml'
 require 'daemons'
+require 'redis'
 
 add_to_loadpath("config", "servers", "../lib", "../models")
 
 require 'http_server'
-require 'socket_server'
 require 'web_socket_server'
 require 'hardware_interface'
 require 'ethernet_interface'
@@ -22,6 +22,7 @@ def main
 	servers   = keys_to_symbols(YAML.load_file('config/servers.yml')).freeze
 	database  = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
 	ldap      = keys_to_symbols(YAML.load_file('config/ldap.yml')).freeze
+	redis     = keys_to_symbols(YAML.load_file('config/redis.yml')).freeze
 	creds     = {:database => database, :ldap => ldap}.freeze
 
 	EM.kqueue
@@ -32,6 +33,7 @@ def main
 			# Setup the persistant connections
 			Gatekeeper::DB.config = database
 			Gatekeeper::Ldap.config = ldap
+			Redis.current = Redis.new(redis)
 
 			zigbee = nil
 			EM.connect(servers[:zigzag][:host],

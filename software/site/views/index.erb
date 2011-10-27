@@ -128,7 +128,7 @@
 
             var socket = new WebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
             socket.onopen = function(data){
-                socket.send("AUTH:poop");
+                socket.send("AUTH:" + userkey);
             }
 
             function handle_action_button(elem){
