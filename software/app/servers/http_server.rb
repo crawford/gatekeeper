@@ -21,7 +21,17 @@ module Gatekeeper
 		end
 
 		def receive_data(data)
-			@parser << data
+			if @last_error.nil?
+				begin
+					@parser << data
+				rescue => e
+					send_data('Exception occured: ' << e.to_s)
+					close_connection_after_writing
+				end
+			else
+				send_data('Exception occured: ' << @last_error.to_s)
+				close_connection_after_writing
+			end
 		end
 
 		def parse_request(uri)
