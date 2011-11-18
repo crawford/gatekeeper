@@ -43,7 +43,7 @@
                         padding: .3em 0em .3em 0em;
                         position: relative;
                         float: left;
-			display: -moz-box;
+                        display: -moz-box;
                         display: -webkit-box;
                     }
 
@@ -127,7 +127,12 @@
 
             var sent_actions = {};
 
-            var socket = new WebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
+            var socket;
+            if (typeof WebSocket === 'undefined') {
+                socket = new MozWebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
+            } else {
+                socket = new WebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
+            }
             socket.onopen = function(data){
                 socket.send("AUTH:" + userkey);
             }
