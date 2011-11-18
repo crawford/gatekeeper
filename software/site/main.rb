@@ -15,8 +15,6 @@ require 'ldap'
 require 'user'
 
 class Main < Sinatra::Base
-	include(Rack::Webauth::Helpers)
-
 	FETCH_LOG = '
 		SELECT users.uuid, types.name as type, actions.name as action, events.datetime
 		FROM users, types, actions, events
@@ -33,7 +31,7 @@ class Main < Sinatra::Base
 	'.freeze
 
 	KEY_EXPIRE_TIME = 900.freeze # 15 minutes
-	LOGIN_KEY = 'WEBAUTH_LOGIN'
+	LOGIN_KEY = 'WEBAUTH_USER'
 
 	before do
 		db_config    = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
@@ -43,12 +41,19 @@ class Main < Sinatra::Base
 		Gatekeeper::DB.config = db_config
 		Gatekeeper::Ldap.config = ldap_config
 
-		@redis = Redis.new(redis_config)
+		begin
+			@redis = Redis.new(redis_config)
+			@redis.auth(redis_config[:password])
+		rescue => e
+			@last_error = e
+		end
 
 		@uuid = UUID.new
 	end
 
 	get '/' do
+		return @last_error.to_s if @last_error
+
 		hostname = Socket.gethostbyname(Socket.gethostname).first
 		#TODO - Look this up
 		wsport = 8080
