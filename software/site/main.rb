@@ -5,7 +5,6 @@ require '../lib/misc_helpers'
 require 'sinatra'
 require 'socket'
 require 'yaml'
-require 'rack-webauth'
 require 'redis'
 require 'uuid'
 
@@ -34,6 +33,7 @@ class Main < Sinatra::Base
 	'.freeze
 
 	KEY_EXPIRE_TIME = 900.freeze # 15 minutes
+	LOGIN_KEY = 'WEBAUTH_LOGIN'
 
 	before do
 		db_config    = keys_to_symbols(YAML.load_file('config/database.yml')).freeze
@@ -53,17 +53,22 @@ class Main < Sinatra::Base
 		#TODO - Look this up
 		wsport = 8080
 
+		login = ENV[LOGIN_KEY]
+		unless login
+			return 'How in the holy hell did you get here?'
+		end
+
 		# Grab or generate the users secret key so they auth over websockets
-		if @redis.exists(webauth.login)
-			key = @redis.get(webauth.login)
+		if @redis.exists(login)
+			key = @redis.get(login)
 		else
 			key = @uuid.generate
-			@redis.set(webauth.login, key)
-			@redis.set(key, webauth.login)
+			@redis.set(login, key)
+			@redis.set(key, login)
 		end
 
 		# Push back the expiration time for the key
-		@redis.expire(webauth.login, KEY_EXPIRE_TIME)
+		@redis.expire(login, KEY_EXPIRE_TIME)
 		@redis.expire(key, KEY_EXPIRE_TIME)
 
 		erb :index, :locals => {:hostname => hostname, :wsport => wsport, :key => key}

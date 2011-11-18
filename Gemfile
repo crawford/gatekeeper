@@ -12,7 +12,6 @@ gem "addressable", ">=2.1.1"
 gem "em-websocket"
 gem "sinatra"
 gem "net-ldap"
-gem "rack-webauth"
 gem "uuid"
 
 #Temporary
