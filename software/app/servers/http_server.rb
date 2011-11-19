@@ -10,24 +10,20 @@ module Gatekeeper
 		def initialize(config)
 			@parser = Http::Parser.new
 			@parser.on_headers_complete = proc do
-				begin
-					parse_request(@parser.request_url)
-				rescue => e
-					send_data('Exception occured: ' << e.to_s)
-					close_connection_after_writing
-					raise e
-				end
+				parse_request(@parser.request_url)
+			rescue => e
+				send_data('Exception occured: ' << e.to_s)
+				close_connection_after_writing
+				raise e
 			end
 		end
 
 		def receive_data(data)
 			if @last_error.nil?
-				begin
-					@parser << data
-				rescue => e
-					send_data('Exception occured: ' << e.to_s)
-					close_connection_after_writing
-				end
+				@parser << data
+			rescue => e
+				send_data('Exception occured: ' << e.to_s)
+				close_connection_after_writing
 			else
 				send_data('Exception occured: ' << @last_error.to_s)
 				close_connection_after_writing

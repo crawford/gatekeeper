@@ -50,26 +50,24 @@ module Gatekeeper
 		# Open a connection to the Gatekeeper database and LDAP
 
 		def initialize
-			begin
-				@db = DB.new
-				@ldap = Ldap.new
-				@redis = Redis.current
-				@last_error = nil
-				@hardware = HardwareInterface.new(self)
-				@@states ||= nil
-				unless @@states
-					@@states = Hash.new
-					doors = fetch_all_doors
-					doors.each do |door|
-						#TODO: update the states here
-						p door
-					end
+			@db = DB.new
+			@ldap = Ldap.new
+			@redis = Redis.current
+			@last_error = nil
+			@hardware = HardwareInterface.new(self)
+			@@states ||= nil
+			unless @@states
+				@@states = Hash.new
+				doors = fetch_all_doors
+				doors.each do |door|
+					#TODO: update the states here
+					p door
 				end
-			# TODO: Rescue LDAP connection errors
-			rescue Mysql2::Error => e
-				p e
-				@last_error = e
 			end
+		# TODO: Rescue LDAP connection errors
+		rescue Mysql2::Error => e
+			p e
+			@last_error = e
 		end
 
 
