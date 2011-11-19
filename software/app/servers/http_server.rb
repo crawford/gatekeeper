@@ -16,7 +16,6 @@ module Gatekeeper
 		def receive_data(data)
 			if @last_error.nil?
 				begin
-					parse_request(@parser.request_url)
 					offset = @parser << data
 					post = data[offset..-1].split(',')
 
