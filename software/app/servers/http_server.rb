@@ -27,7 +27,7 @@ module Gatekeeper
 
 					parse_request(@parser.request_url, post)
 				rescue => e
-					send_data('Exception occured: ' << e.to_s)
+					send_data('Exception occured: ' << e.backtrace.to_s)
 					close_connection_after_writing
 				end
 			else

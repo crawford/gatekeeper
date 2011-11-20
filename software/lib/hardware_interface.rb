@@ -7,8 +7,8 @@ require 'ldap'
 
 module Gatekeeper
 	class HardwareInterface
-		FETCH_INTERFACE_FROM_DID = '
-			SELECT interfaces.name AS interface
+		FETCH_INTERFACE_AND_ADDRESS_FROM_DID = '
+			SELECT interfaces.name AS interface, doors.message_address AS address
 			FROM doors, interfaces
 			WHERE doors.interface_id = interfaces.id AND doors.id = %d
 		'.freeze
@@ -97,7 +97,11 @@ module Gatekeeper
 					return unless door_id
 
 					user = @api_server.create_user_by_info(info)
-					@api_server.do_action(user, :pop, door_id)
+					begin
+						@api_server.do_action(user, :pop, door_id)
+					rescue => e
+						puts e.backtrace.to_s
+					end
 				when C_ERROR
 					puts "An error occured on door #{sender} (#{payload.dump})"
 				else
@@ -202,11 +206,14 @@ module Gatekeeper
 		# Builds and sends a message, and registers that fiber to the message
 
 		def send_and_register(fiber, dID, command, payload = '')
-			key = "#{dID},#{@msgid.to_s}"
+			interface, address = get_interface_for_dID(dID)
+			key = "#{address},#{@msgid.to_s}"
 
-			if send_message(dID, command, payload)
+			if interface
+				send_message(interface, address, command, payload)
 				register_fiber(fiber, key)
 			else
+				puts "No interface for dID (#{dID})"
 				fiber.fail
 			end
 		end
@@ -228,32 +235,26 @@ module Gatekeeper
 		end
 
 
-		# Builds and sends a message to the specified dID
+		# Builds and sends a message to the specified interface and address
 
-		def send_message(dID, command, payload)
-			interface = get_interface_for_dID(dID)
-			unless interface
-				puts "No interface for dID (#{dID})"
-				return false
-			end
+		def send_message(interface, address, command, payload)
 			msg = command + @msgid.to_s + payload.to_s + "\n"
 			@msgid += 1
 
 			puts "Sending message(#{msg.dump}) to interface(#{interface})"
-			p dID
-			interface.send_message(dID.to_s, msg)
-
-			return true
+			interface.send_message(address.to_s, msg)
 		end
 
 
-		# Return the interface object associated with the specified dID
+		# Return the interface object and address associated with the specified dID
 
 		def get_interface_for_dID(dID)
-			case @db.fetch(:interface, FETCH_INTERFACE_FROM_DID, dID)
+			result = @db.query(FETCH_INTERFACE_AND_ADDRESS_FROM_DID, dID).first
+			interface = case result[:interface]
 				when 'zigbee' then @zigbee
 				when 'ethernet' then @ethernet
 			end
+			[interface, result[:address]]
 		end
 	end
 end
