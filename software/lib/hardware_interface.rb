@@ -10,7 +10,7 @@ module Gatekeeper
 		FETCH_INTERFACE_FROM_DID = '
 			SELECT interfaces.name AS interface
 			FROM doors, interfaces
-			WHERE doors.interface_id = interfaces.id AND message_address = %d
+			WHERE doors.interface_id = interfaces.id AND doors.id = %d
 		'.freeze
 		FETCH_ACCESS_LIST_FOR_DID = '
 			SELECT users.id AS id
