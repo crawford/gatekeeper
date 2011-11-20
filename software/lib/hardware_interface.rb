@@ -61,7 +61,7 @@ module Gatekeeper
 
 		def process_message(data, sender)
 			cmd = data[0]
-			msgid = data[1]
+			msgid = data.getbyte(1)
 			payload = data[2..-1]
 
 			#puts "CMD: #{cmd.dump}"
@@ -78,7 +78,7 @@ module Gatekeeper
 
 			case cmd
 				when C_RESPONSE
-					key = "#{sender},#{msgid}"
+					key = "#{sender},#{msgid.to_s}"
 					if @fibers.has_key?(key)
 						@fibers.delete(key).resume(payload)
 					else
@@ -238,8 +238,9 @@ module Gatekeeper
 		# Builds and sends a message to the specified interface and address
 
 		def send_message(interface, address, command, payload)
-			msg = command + @msgid.to_s + payload.to_s + "\n"
+			msg = command + @msgid.chr + payload.to_s + "\n"
 			@msgid += 1
+			@msgid += 1 if (@msgid == 10) #Skip \n
 
 			puts "Sending message(#{msg.dump}) to interface(#{interface})"
 			interface.send_message(address.to_s, msg)
