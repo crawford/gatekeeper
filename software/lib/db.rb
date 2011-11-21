@@ -39,9 +39,6 @@ module Gatekeeper
 
 		def query(query, *args)
 			super(query % args)
-		rescue
-			reconnect!
-			retry
 		end
 	end
 end

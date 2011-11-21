@@ -27,7 +27,7 @@ class MessageProcess < Fiber
 			dID    = payload[0]
 			result = payload[1]
 
-			success = (payload == SUCCESS or payload == LOCKED or payload == UNLOCKED)
+			success = (result == SUCCESS or result == LOCKED or result == UNLOCKED)
 			error_type = if success then nil else :failure end
 			error = if success then nil else 'Operation failed' end
 

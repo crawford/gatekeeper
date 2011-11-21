@@ -91,7 +91,7 @@ module Gatekeeper
 				if @@states.has_key?(door[:id])
 					door.merge(@@states[door[:id]])
 				else
-					door[:state] = 'unlocked'
+					door[:state] = 'unknown'
 					door
 				end
 			end
