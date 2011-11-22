@@ -46,6 +46,8 @@ module Gatekeeper
 			(datetime, user_id, type_id, action_id, action_did, action_arg, service_id) VALUES (NOW(), %d, %d, %d, %d, "%s", %d)
 		'.freeze
 
+		attr_accessor :state_changed_callbacks
+
 
 		# Open a connection to the Gatekeeper database and LDAP
 
@@ -56,6 +58,7 @@ module Gatekeeper
 			@last_error = nil
 			@hardware = HardwareInterface.new(self)
 			@states = Hash.new
+			@state_changed_callbacks = []
 
 		# TODO: Rescue LDAP connection errors
 		rescue Mysql2::Error => e
@@ -135,8 +138,11 @@ module Gatekeeper
 					p dID
 					p arg
 
-					@states[dID] = result[:response] if result[:response]
-					p @states
+					if result[:response]
+						@states[dID] = result[:response] if result[:response]
+						notify_state_changed
+						p @states
+					end
 
 					type = result[:error_type] || :success
 					log_action(user, type, action, dID, arg)
@@ -171,6 +177,7 @@ module Gatekeeper
 			call = Proc.new do |result|
 				@states[id] = result[:response]
 				p @states
+				notify_state_changed
 			end
 			@hardware.query(id, call)
 		end
@@ -199,6 +206,14 @@ module Gatekeeper
 				return nil
 			end
 			door_id
+		end
+
+
+		# Clear the saved state of the door
+
+		def clear_door_state(dID)
+			@states[dID] = :unknown
+			notify_state_changed
 		end
 
 
@@ -241,6 +256,13 @@ module Gatekeeper
 
 			@db.query(INSERT_VALUE, table, 'name', value)
 			@db.fetch(:id, GET_ID_BY_VALUE, table, value)
+		end
+
+
+		# Notify all of the listeners that the door states have changed
+
+		def notify_state_changed
+			@state_changed_callbacks.each { |callback| callback }
 		end
 	end
 end

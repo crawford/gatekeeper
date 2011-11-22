@@ -12,6 +12,8 @@ module Gatekeeper
 			@onclose   = method(:onclose)
 
 			@user = nil
+
+			ApiServer.instance.state_changed_callbacks.add(method(:send_states))
 		end
 
 		def onopen
@@ -35,15 +37,7 @@ module Gatekeeper
 					end
 
 					send({:result => true, :error => nil, :id => id}.to_json)
-
-					doors = ApiServer.instance.fetch_all_doors
-					doors.each do |door|
-						# This should actually be checked
-						door[:pop]    = true
-						door[:unlock] = true
-						door[:lock]   = true
-					end
-					send({:states => doors}.to_json)
+					send_states
 				when 'POP'
 					ApiServer.instance.do_action(@user, :pop, payload.to_i) do |result|
 						send(result.merge({:id => id}).to_json)
@@ -67,6 +61,17 @@ module Gatekeeper
 		end
 
 		def onclose
+		end
+
+		def send_states
+			doors = ApiServer.instance.fetch_all_doors
+			doors.each do |door|
+				# This should actually be checked
+				door[:pop]    = true
+				door[:unlock] = true
+				door[:lock]   = true
+			end
+			send({:states => doors}.to_json)
 		end
 	end
 end

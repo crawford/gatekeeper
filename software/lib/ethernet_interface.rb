@@ -52,6 +52,8 @@ module Gatekeeper
 			puts '========================='
 			puts "Connection to #{@door[:name]} Lost" if     @door
 			puts "Connection to unknown device closed" unless @door
+
+			ApiServer.instance.clear_door_state(@door[:dID])
 		end
 	end
 end
