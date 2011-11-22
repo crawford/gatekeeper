@@ -14,7 +14,7 @@ module Gatekeeper
 		end
 
 		def receive_data(data)
-			if @last_error.nil?
+			unless @last_error
 				begin
 					offset = @parser << data
 					post = data[offset..-1].split(',')
@@ -58,42 +58,42 @@ module Gatekeeper
 					# POST username: (username)
 					# POST password: (password)
 					id = uri[1].to_i
-					if user.nil?
-						send_data(INVALID_CREDS)
-						close_connection_after_writing
-					else
+					if user
 						ApiServer.instance.do_action(user, :unlock, id) do |result|
 							send_data(result)
 							close_connection_after_writing
 						end
+					else
+						send_data(INVALID_CREDS)
+						close_connection_after_writing
 					end
 				when 'lock'
 					# /lock/(door id)
 					# POST username: (username)
 					# POST password: (password)
 					id = uri[1].to_i
-					if user.nil?
-						send_data(INVALID_CREDS)
-						close_connection_after_writing
-					else
+					if user
 						ApiServer.instance.do_action(user, :lock, id) do |result|
 							send_data(result)
 							close_connection_after_writing
 						end
+					else
+						send_data(INVALID_CREDS)
+						close_connection_after_writing
 					end
 				when 'pop'
 					# /pop/(door id)
 					# POST username: (username)
 					# POST password: (password)
 					id = uri[1].to_i
-					if user.nil?
-						send_data(INVALID_CREDS)
-						close_connection_after_writing
-					else
+					if user
 						ApiServer.instance.do_action(user, :pop, id) do |result|
 							send_data(result)
 							close_connection_after_writing
 						end
+					else
+						send_data(INVALID_CREDS)
+						close_connection_after_writing
 					end
 				when 'set_code'
 

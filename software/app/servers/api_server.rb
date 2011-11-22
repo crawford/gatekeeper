@@ -125,7 +125,7 @@ module Gatekeeper
 		# perform the action (if allowed), and log it to the database
 
 		def do_action(user, action, dID, arg = nil, &block)
-			raise ArgumentError.new('Invalid user') if user.nil?
+			raise ArgumentError.new('Invalid user') unless user
 			if can_user_do?(user, action, dID)
 				callback = Proc.new do |result|
 					p "====CALLBACK==="
@@ -237,7 +237,7 @@ module Gatekeeper
 
 		def get_id_or_create(table, value)
 			result = @db.fetch(:id, GET_ID_BY_VALUE, table, value)
-			return result unless result.nil?
+			return result if result
 
 			@db.query(INSERT_VALUE, table, 'name', value)
 			@db.fetch(:id, GET_ID_BY_VALUE, table, value)
