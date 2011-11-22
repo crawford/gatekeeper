@@ -45,7 +45,7 @@ module Gatekeeper
 			@ethernet = EthernetPool.new
 			@db = DB.new
 			@ldap = Ldap.new
-			@msgid = 0
+			@msgid = 1
 			@fibers = {}
 		end
 
@@ -206,9 +206,9 @@ module Gatekeeper
 		# Builds and sends a message, and registers that fiber to the message
 
 		def send_and_register(fiber, dID, command, payload = '')
-			interface, address = get_interface_for_dID(dID)
-			key = "#{address},#{@msgid.to_s}"
+			key = "#{dID},#{@msgid.to_s}"
 
+			interface, address = get_interface_for_dID(dID)
 			if interface
 				send_message(interface, address, command, payload)
 				register_fiber(fiber, key)
@@ -240,7 +240,7 @@ module Gatekeeper
 		def send_message(interface, address, command, payload)
 			msg = command + @msgid.chr + payload.to_s + "\n"
 			@msgid += 1
-			@msgid += 1 if (@msgid == 10) #Skip \n
+			@msgid += 1 if (@msgid == 0 or @msgid == 10) #Skip \0 and \n
 
 			puts "Sending message(#{msg.dump}) to interface(#{interface})"
 			interface.send_message(address.to_s, msg)
@@ -251,6 +251,7 @@ module Gatekeeper
 
 		def get_interface_for_dID(dID)
 			result = @db.query(FETCH_INTERFACE_AND_ADDRESS_FROM_DID, dID).first
+			return nil unless result
 			interface = case result[:interface]
 				when 'zigbee' then @zigbee
 				when 'ethernet' then @ethernet

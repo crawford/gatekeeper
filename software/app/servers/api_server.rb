@@ -55,15 +55,8 @@ module Gatekeeper
 			@redis = Redis.current
 			@last_error = nil
 			@hardware = HardwareInterface.new(self)
-			@@states ||= nil
-			unless @@states
-				@@states = Hash.new
-				doors = fetch_all_doors
-				doors.each do |door|
-					#TODO: update the states here
-					p door
-				end
-			end
+			@states = Hash.new
+
 		# TODO: Rescue LDAP connection errors
 		rescue Mysql2::Error => e
 			p e
@@ -88,12 +81,12 @@ module Gatekeeper
 
 		def fetch_all_doors
 			@db.query(FETCH_ALL_DOORS).collect do |door|
-				if @@states.has_key?(door[:id])
-					door.merge(@@states[door[:id]])
+				if @states.has_key?(door[:id])
+					door[:state] = @states[door[:id]]
 				else
-					door[:state] = 'unknown'
-					door
+					door[:state] = :unknown
 				end
+				door
 			end
 		end
 
@@ -142,6 +135,9 @@ module Gatekeeper
 					p dID
 					p arg
 
+					@states[dID] = result[:response] if result[:response]
+					p @states
+
 					type = result[:error_type] || :success
 					log_action(user, type, action, dID, arg)
 					yield result if block_given?
@@ -171,10 +167,10 @@ module Gatekeeper
 
 		# Fetch the state of a single door (given by the door id).
 
-		def fetch_door_state(id, callback)
-			call = Proc.new do |state|
-				@@states[id] = state
-				callback(state)
+		def query_door_state(id)
+			call = Proc.new do |result|
+				@states[id] = result[:response]
+				p @states
 			end
 			@hardware.query(id, call)
 		end

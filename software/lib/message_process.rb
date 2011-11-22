@@ -27,15 +27,21 @@ class MessageProcess < Fiber
 			dID    = payload[0]
 			result = payload[1]
 
-			success = (result == SUCCESS or result == LOCKED or result == UNLOCKED)
+			success    = (result == SUCCESS or result == LOCKED or result == UNLOCKED)
 			error_type = if success then nil else :failure end
-			error = if success then nil else 'Operation failed' end
+			error      = if success then nil else 'Operation failed' end
+			response   = case result
+				when SUCCESS  then :success
+				when LOCKED   then :locked
+				when UNLOCKED then :unlocked
+			end
 
 			@timer.cancel
 			@callback.call({
-				:success => success,
+				:success    => success,
 				:error_type => error_type,
-				:error => error
+				:error      => error,
+				:response   => response
 			}) if @callback
 			@cleanup.call if @cleanup
 		end
@@ -44,9 +50,10 @@ class MessageProcess < Fiber
 	def cancel
 		@timer.cancel
 		@callback.call(
-			{:success => false,
+			{:success    => false,
 			 :error_type => :cancelled,
-			 :error => 'Operation cancelled'
+			 :error      => 'Operation cancelled',
+			 :response   => response
 			}) if @callback
 		@cleanup.call if @cleanup
 	end
@@ -54,9 +61,10 @@ class MessageProcess < Fiber
 	def fail
 		@timer.cancel
 		@callback.call(
-			{:success => false,
+			{:success    => false,
 			 :error_type => :failure,
-			 :error => 'Operation failed'
+			 :error      => 'Operation failed',
+			 :response   => response
 			}) if @callback
 	end
 
@@ -66,9 +74,10 @@ class MessageProcess < Fiber
 		@timer.cancel if @timer
 		@timer = EM::Timer.new(5) do
 			@callback.call(
-				{:success => false,
+				{:success    => false,
 				 :error_type => :timeout,
-				 :error => 'Operation timed out'
+				 :error      => 'Operation timed out',
+				 :response   => response
 				}) if @callback
 			@cleanup.call if @cleanup
 		end

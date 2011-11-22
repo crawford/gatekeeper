@@ -1,7 +1,7 @@
 require 'socket'
 
 FETCH_ETHERNET_DOOR = '
-	SELECT doors.name AS name, message_address AS dID
+	SELECT doors.name AS name, message_address AS dAddr, doors.id AS dID
 	FROM doors, interfaces
 	WHERE interface_id = interfaces.id AND
 	      interfaces.name = "ethernet" AND
@@ -32,13 +32,15 @@ module Gatekeeper
 				return
 			end
 
-			ApiServer.instance.register_ethernet(door[:dID], self)
+			ApiServer.instance.register_ethernet(door[:dAddr], self)
 
 			@door = door
 			puts "'#{door[:name]}' device connected"
 
-			num = door[:dID].to_i.chr
+			num = door[:dAddr].to_i.chr
 			send_data("D\001#{num}\n")
+
+			ApiServer.instance.query_door_state(door[:dID])
 		end
 
 		def receive_data(data)

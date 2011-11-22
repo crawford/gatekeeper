@@ -40,7 +40,7 @@ module Gatekeeper
 					doors.each do |door|
 						# This should actually be checked
 						door[:pop]    = true
-						door[:unlock] = false
+						door[:unlock] = true
 						door[:lock]   = true
 					end
 					send({:states => doors}.to_json)
