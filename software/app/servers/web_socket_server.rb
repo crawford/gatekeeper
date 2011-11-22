@@ -13,7 +13,7 @@ module Gatekeeper
 
 			@user = nil
 
-			ApiServer.instance.state_changed_callbacks.add(method(:send_states))
+			ApiServer.instance.state_changed_callbacks << method(:send_states)
 		end
 
 		def onopen
