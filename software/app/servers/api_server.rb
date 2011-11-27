@@ -262,7 +262,7 @@ module Gatekeeper
 		# Notify all of the listeners that the door states have changed
 
 		def notify_state_changed
-			@state_changed_callbacks.each { |callback| callback }
+			@state_changed_callbacks.each { |callback| callback.call }
 		end
 	end
 end
