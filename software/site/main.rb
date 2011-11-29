@@ -58,7 +58,7 @@ class Main < Sinatra::Base
 		#TODO - Look this up
 		wsport = 8080
 
-		login = ENV[LOGIN_KEY]
+		login = request.env[LOGIN_KEY]
 		unless login
 			return 'How in the holy hell did you get here?'
 		end
