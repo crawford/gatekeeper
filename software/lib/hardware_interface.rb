@@ -97,11 +97,7 @@ module Gatekeeper
 					return unless door_id
 
 					user = @api_server.create_user_by_info(info)
-					begin
-						@api_server.do_action(user, :pop, door_id)
-					rescue => e
-						puts e.backtrace.to_s
-					end
+					@api_server.do_action(user, :pop, door_id)
 				when C_ERROR
 					puts "An error occured on door #{sender} (#{payload.dump})"
 				else
@@ -210,8 +206,14 @@ module Gatekeeper
 
 			interface, address = get_interface_for_dID(dID)
 			if interface
-				send_message(interface, address, command, payload)
-				register_fiber(fiber, key)
+				begin
+					send_message(interface, address, command, payload)
+				rescue => e
+					puts e.backtrace.to_s
+					fiber.fail
+				else
+					register_fiber(fiber, key)
+				end
 			else
 				puts "No interface for dID (#{dID})"
 				fiber.fail

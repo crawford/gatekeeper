@@ -53,7 +53,7 @@ class MessageProcess < Fiber
 			{:success    => false,
 			 :error_type => :cancelled,
 			 :error      => 'Operation cancelled',
-			 :response   => :nil
+			 :response   => nil
 			}) if @callback
 		@cleanup.call if @cleanup
 	end
@@ -64,7 +64,7 @@ class MessageProcess < Fiber
 			{:success    => false,
 			 :error_type => :failure,
 			 :error      => 'Operation failed',
-			 :response   => :nil
+			 :response   => nil
 			}) if @callback
 	end
 
@@ -77,7 +77,7 @@ class MessageProcess < Fiber
 				{:success    => false,
 				 :error_type => :timeout,
 				 :error      => 'Operation timed out',
-				 :response   => :nil
+				 :response   => nil
 				}) if @callback
 			@cleanup.call if @cleanup
 		end

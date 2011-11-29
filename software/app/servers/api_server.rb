@@ -84,11 +84,7 @@ module Gatekeeper
 
 		def fetch_all_doors
 			@db.query(FETCH_ALL_DOORS).collect do |door|
-				if @states.has_key?(door[:id])
-					door[:state] = @states[door[:id]]
-				else
-					door[:state] = :unknown
-				end
+				door[:state] = @states[door[:id]] || :unknown
 				door
 			end
 		end
@@ -139,7 +135,7 @@ module Gatekeeper
 					p arg
 
 					if result[:response]
-						@states[dID] = result[:response] if result[:response]
+						@states[dID] = result[:response]
 						notify_state_changed
 						p @states
 					end
