@@ -48,13 +48,24 @@
                     }
 
                     .container .door .door-message {
-                        margin: 5px 0px 0px 0px;
+                        margin: 7px 0px 0px 0px;
                         padding: 0px 0px 0px 10px;
                         position: relative;
                         float: left;
                         font-size: .8em;
                         font-style: italic;
                         color: #cc3333;
+                        font-weight: bold;
+                    }
+
+                    .container .door .door-state {
+                        margin: 4px 0px 0px 0px;
+                        padding: 0px 0px 0px 10px;
+                        position: relative;
+                        float: left;
+                        font-size: 1em;
+                        opacity: 0.3;
+                        color: #333333;
                         font-weight: bold;
                     }
 
@@ -152,10 +163,14 @@
                         lock_door(elem);
                         break;
                 }
+
+                var buttons = $('#' + elem.attr('door_id') + ' .action-button');
+                $('#' + elem.attr('door_id') + ' .action-button').attr('disabled', true);
             }
 
             socket.onmessage = function(data){
                 data = JSON.parse(data.data);
+					console.log(data);
 
                 if('states' in data){
                     update_states(data.states);
@@ -170,7 +185,6 @@
             function update_states(states){
 
                 if($('.door').length == 0){
-                    var doors = $('#door_container');
                     for(var i = 0; i < states.length; i++){
                         var door = $('<div class="door" id="' + states[i].id + '"></div>');
 
@@ -183,6 +197,8 @@
                         }
 
                         door.append('<div class="door-name">' + states[i].name + '</div>');
+
+                        door.append('<div class="door-state">' + states[i].state + '</div>');
 
                         door.append('<div class="door-message"></div>');
 
@@ -218,8 +234,10 @@
                 } else {
                     for(var i = 0; i < states.length; i++){
                         var door = $('#' + states[i].id);
+                        var door_state = $('#' + states[i].id + " > .door-state");
 
                         door.attr('class', 'door');
+                        door_state.html(states[i].state);
 
                         if(states[i].state == 'unlocked'){
                             door.addClass('open');
@@ -242,15 +260,17 @@
                     var data = sent_actions[response.id];
                     var door = $('#' + data.id);
 
-                    if(response.success == true){ 
+                    if(response.success == true){
                         door.attr('class', 'door');
                         door.addClass('open');
 
                         setTimeout(function(){
                             door.attr('class', 'door');
                             door.addClass('closed');
+                            $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
                         }, 2000);
                     } else {
+                        $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
 
                         door.find('.door-message').html(response.error);
 
@@ -272,17 +292,14 @@
                 var callback = function(response){
                     var data = sent_actions[response.id];
                     var door = $('#' + data.id);
-                    if(response.error == null){
-                        door.attr('class', 'door');
-                        door.addClass('open');
-                    } else {
+                    if(response.error != null){
                         door.find('.door-message').html(response.error);
 
                         setTimeout(function(){
                             door.find('.door-message').html('');
                         }, 2000);
                     }
-
+                    $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
                 }
 
 
@@ -297,17 +314,14 @@
                     var data = sent_actions[response.id];
                     var door = $('#' + data.id);
 
-                    if(response.error == null){
-                        door.attr('class', 'door');
-                        door.addClass('closed');
-                    } else {
+                    if(response.error != null){
                         door.find('.door-message').html(response.error);
 
                         setTimeout(function(){
                             door.find('.door-message').html('');
                         }, 2000);
                     }
-
+                    $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
                 }
 
                 sent_actions[id] = {id: element.attr('door_id'), action: callback};
