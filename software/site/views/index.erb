@@ -45,6 +45,8 @@
                         float: left;
                         display: -moz-box;
                         display: -webkit-box;
+                        text-decoration: none;
+                        color: #000000;
                     }
 
                     .container .door .door-message {
@@ -195,7 +197,7 @@
                             door.addClass('unknown');
                         }
 
-                        door.append('<div class="door-name">' + states[i].name + '</div>');
+                        door.append('<a class="door-name" href="log/' + states[i].id + '">' + states[i].name + '</a>');
 
                         door.append('<div class="door-state">' + states[i].state + '</div>');
 
