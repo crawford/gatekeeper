@@ -170,7 +170,6 @@
 
             socket.onmessage = function(data){
                 data = JSON.parse(data.data);
-					console.log(data);
 
                 if('states' in data){
                     update_states(data.states);
