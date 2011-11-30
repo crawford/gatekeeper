@@ -50,10 +50,10 @@ module Gatekeeper
 
 		def unbind
 			puts '========================='
-			puts "Connection to #{@door[:name]} Lost" if     @door
+			puts "Connection to #{@door[:name]} Lost"  if     @door
 			puts "Connection to unknown device closed" unless @door
 
-			ApiServer.instance.clear_door_state(@door[:dID])
+			ApiServer.instance.clear_door_state(@door[:dID]) if @door
 		end
 	end
 end
