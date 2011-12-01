@@ -241,7 +241,7 @@ module Gatekeeper
 
 		def send_message(interface, address, command, payload)
 			msg = command + @msgid.chr + payload.to_s + "\n"
-			@msgid += 1
+			@msgid = (@msgid + 1) % 256
 			@msgid += 1 if (@msgid == 0 or @msgid == 10) #Skip \0 and \n
 
 			puts "Sending message(#{msg.dump}) to interface(#{interface})"
