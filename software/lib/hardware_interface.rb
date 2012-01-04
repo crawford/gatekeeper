@@ -93,11 +93,8 @@ module Gatekeeper
 					p info
 					return unless info
 
-					door_id = @api_server.did_for_daddr(door_addr)
-					return unless door_id
-
 					user = @api_server.create_user_by_info(info)
-					@api_server.do_action(user, :pop, door_id)
+					@api_server.do_action(user, :pop, sender)
 				when C_ERROR
 					puts "An error occured on door #{sender} (#{payload.dump})"
 				else
