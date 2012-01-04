@@ -1,4 +1,4 @@
-#include <avr/io.h>
+#include <avr/common.h>
 
 #include "ibutton.h"
 #include "onewire.h"

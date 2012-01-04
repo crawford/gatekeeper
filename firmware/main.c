@@ -1,9 +1,10 @@
-#include <avr/io.h>
+#include <avr/sleep.h>
 #include "leds.h"
 #include "motor.h"
 #include "ibutton.h"
 
-void sleep();
+void handle_ibutton();
+void handle_message();
 
 int main() {
 	init_leds();
@@ -11,11 +12,15 @@ int main() {
 	init_ibutton();
 	//init_xbee();
 
+	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
 	uint8_t has_ibutton;
 
 	while (1) {
 		// Sleep until an external event occurs
-		sleep();
+		sleep_enable();
+		sleep_cpu();
+		sleep_disable();
 
 		// Check to see if the event was an ibutton
 		has_ibutton = 0;
@@ -24,6 +29,7 @@ int main() {
 		}
 
 		if (has_ibutton) {
+			handle_ibutton();
 			ibutton_handled();
 		}
 
@@ -33,7 +39,11 @@ int main() {
 	return 0;
 }
 
-void sleep() {
+void handle_ibutton() {
+
+}
+
+void handle_messsage() {
 
 }
 
