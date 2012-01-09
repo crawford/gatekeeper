@@ -8,8 +8,8 @@ module Gatekeeper
 		include EM::Deferrable
 		include Singleton
 
-		USER_ACTIONS =  [:pop, :unlock, :lock].freeze
-		ADMIN_ACTIONS = [:add_rule, :remove_rule, :add_ibutton, :remove_ibutton].freeze
+		USER_ACTIONS =  [:pop, :lock].freeze
+		ADMIN_ACTIONS = [:unlock, :add_rule, :remove_rule, :add_ibutton, :remove_ibutton].freeze
 
 		FETCH_ALL_DOORS = '
 			SELECT doors.id, doors.name
@@ -189,7 +189,7 @@ module Gatekeeper
 				@db.query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
 				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
 			end
-			User.new(info.merge({:admin => false, :id => id}))
+			User.new(info.merge({:id => id}))
 		end
 
 
