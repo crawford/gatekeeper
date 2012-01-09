@@ -65,11 +65,15 @@ module Gatekeeper
 
 		def send_states
 			doors = ApiServer.instance.fetch_all_doors
+
+			pop    = ApiServer::USER_ACTIONS.include?(:pop)    || (ApiServer::ADMIN_ACTIONS.include?(:pop)    && @user.admin)
+			unlock = ApiServer::USER_ACTIONS.include?(:unlock) || (ApiServer::ADMIN_ACTIONS.include?(:unlock) && @user.admin)
+			lock   = ApiServer::USER_ACTIONS.include?(:lock)   || (ApiServer::ADMIN_ACTIONS.include?(:lock)   && @user.admin)
+
 			doors.each do |door|
-				# This should actually be checked
-				door[:pop]    = true
-				door[:unlock] = true
-				door[:lock]   = true
+				door[:pop]    = pop
+				door[:unlock] = unlock
+				door[:lock]   = lock
 			end
 			send({:states => doors}.to_json)
 		end
