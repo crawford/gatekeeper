@@ -6,7 +6,16 @@ require 'api_server'
 
 module Gatekeeper
 	class HttpServer < EM::Connection
-		INVALID_CREDS = 'Invalid username or password'.freeze
+		INVALID_CREDS = {:success    => false,
+		                 :error_type => :login,
+		                 :error      => 'Invalid username or password',
+		                 :response   => nil
+		                }.freeze
+		INVALID_COMMAND = {:success    => false,
+		                   :error_type => :command,
+		                   :error      => 'Invalid command',
+		                   :response   => nil
+		                  }.freeze
 
 		def initialize(config)
 			@parser = Http::Parser.new
@@ -27,12 +36,12 @@ module Gatekeeper
 
 					parse_request(@parser.request_url, post)
 				rescue => e
-					send_data('Exception occured: ' << e.backtrace.to_s)
-					close_connection_after_writing
+					puts 'Exception occured: ' << e.backtrace.to_s
+					close_connection
 				end
 			else
-				send_data('Exception occured: ' << @last_error.to_s)
-				close_connection_after_writing
+				puts 'Exception occured: ' << @last_error.to_s
+				close_connection
 			end
 		end
 
@@ -70,7 +79,7 @@ module Gatekeeper
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS)
+						send_data(INVALID_CREDS.to_json)
 						close_connection_after_writing
 					end
 				when 'lock'
@@ -84,7 +93,7 @@ module Gatekeeper
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS)
+						send_data(INVALID_CREDS.to_json)
 						close_connection_after_writing
 					end
 				when 'pop'
@@ -98,7 +107,7 @@ module Gatekeeper
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS)
+						send_data(INVALID_CREDS.to_json)
 						close_connection_after_writing
 					end
 				when 'set_code'
@@ -109,7 +118,8 @@ module Gatekeeper
 
 				when 'favicon'
 				else
-					send_data('Invalid Command')
+					send_data(INVALID_COMMAND.to_json)
+					close_connection_after_writing
 			end
 		end
 
