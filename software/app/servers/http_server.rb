@@ -66,7 +66,7 @@ module Gatekeeper
 						end
 					end
 
-					send_data(res)
+					send_data(res.to_json)
 					close_connection_after_writing
 				when 'unlock'
 					# /unlock/(door id)
@@ -75,7 +75,7 @@ module Gatekeeper
 					id = uri[1].to_i
 					if user
 						ApiServer.instance.do_action(user, :unlock, id) do |result|
-							send_data(result)
+							send_data(result.to_json)
 							close_connection_after_writing
 						end
 					else
@@ -89,7 +89,7 @@ module Gatekeeper
 					id = uri[1].to_i
 					if user
 						ApiServer.instance.do_action(user, :lock, id) do |result|
-							send_data(result)
+							send_data(result.to_json)
 							close_connection_after_writing
 						end
 					else
@@ -103,7 +103,7 @@ module Gatekeeper
 					id = uri[1].to_i
 					if user
 						ApiServer.instance.do_action(user, :pop, id) do |result|
-							send_data(result)
+							send_data(result.to_json)
 							close_connection_after_writing
 						end
 					else
