@@ -57,7 +57,7 @@ module Gatekeeper
 				when 'door_state'
 					# /door_state/(door id)
 					id = uri[1].to_i
-					doors = ApiServer.instance.fetch_door_state(id)
+					doors = ApiServer.instance.fetch_all_doors
 					res = 'Invalid or missing ID'
 					doors.each do |door|
 						if door[:id] == id

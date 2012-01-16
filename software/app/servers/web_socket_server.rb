@@ -12,11 +12,10 @@ module Gatekeeper
 			@onclose   = method(:onclose)
 
 			@user = nil
-
-			ApiServer.instance.state_changed_callbacks << method(:send_states)
 		end
 
 		def onopen
+			ApiServer.instance.state_changed_callbacks << method(:send_states)
 		end
 
 		def onmessage(msg)
@@ -61,6 +60,7 @@ module Gatekeeper
 		end
 
 		def onclose
+			ApiServer.instance.state_changed_callbacks.delete(method(:send_states))
 		end
 
 		def send_states
