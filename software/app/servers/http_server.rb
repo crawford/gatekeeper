@@ -61,7 +61,7 @@ module Gatekeeper
 					res = 'Invalid or missing ID'
 					doors.each do |door|
 						if door[:id] == id
-							res = door.to_json
+							res = door
 							break
 						end
 					end
