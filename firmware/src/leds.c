@@ -7,8 +7,8 @@ void _isr_timer();
 volatile int red_flash_count;
 volatile int green_flash_count;
 
-static const int GREEN_LED_PIN = 6;
-static const int RED_LED_PIN   = 5;
+#define GREEN_LED_PIN 6
+#define RED_LED_PIN   5
 
 
 void init_leds() {

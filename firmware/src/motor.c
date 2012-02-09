@@ -3,8 +3,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-static const int CLOSE_PIN = 4;
-static const int OPEN_PIN  = 5;
+#define CLOSE_PIN 4
+#define OPEN_PIN  5
 
 static inline void MOTOR_DELAY() {
 	_delay_ms(100);

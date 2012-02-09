@@ -1,9 +1,7 @@
 #ifndef IBUTTON_H
 #define IBUTTON_H
 
-enum {
-	IBUTTON_LEN = 8
-};
+#define IBUTTON_LEN 8
 
 extern uint8_t ibutton[IBUTTON_LEN];
 

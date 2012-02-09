@@ -4,16 +4,16 @@
 #define F_CPU 1000000
 #include <inttypes.h>
 
-static const int INPUT  = 0;
-static const int OUTPUT = 1;
-static const int HIGH   = 1;
-static const int LOW    = 0;
+#define INPUT  0
+#define OUTPUT 1
+#define HIGH   1
+#define LOW    0
 
 static inline void WRITE(volatile uint8_t *port, int pin, uint8_t status) {
 	if (status) {
-		*(port) |= (1 << pin);
+		WRITE_HIGH(port, pin);
 	} else {
-		*(port) &= ~(1 << pin);
+		WRITE_LOW(port, pin);
 	}
 }
 
@@ -26,7 +26,7 @@ static inline void WRITE_LOW(volatile uint8_t *port, int pin) {
 }
 
 static inline uint8_t READ(volatile uint8_t *port, int pin) {
-	return *(port) &= 1 << pin;
+	return *(port) & 1 << pin;
 }
 
 static inline void SET_MODE(volatile uint8_t *port, int pin, uint8_t status) {
