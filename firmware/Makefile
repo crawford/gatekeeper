@@ -1,21 +1,36 @@
-CC=avr-gcc
-CFLAGS=-g -Wall -Os -std=c99 -mmcu=atmega168
-OBJ2HEX=avr-objcopy
-TARGET=gatekeeper
+CC      = avr-gcc
+CFLAGS  = -g -Wall -Os -std=c99 -mmcu=atmega168
+OBJ2HEX = avr-objcopy
+TARGET  = gatekeeper
 
-all: $(TARGET).hex
 
-program: $(TARGET).hex
-	cp $(TARGET).hex /media/shared
+BUILD_DIR = build
+SRC_DIR   = src
+SRC_FILES = leds.c      \
+            motor.c     \
+            main.c      \
+            onewire.c   \
+            ibutton.c
+OBJS = $(SRC_FILES:%.c=$(BUILD_DIR)/%.o)
 
-%.o: %.c
+ELF = $(BUILD_DIR)/$(TARGET).elf
+HEX = $(BUILD_DIR)/$(TARGET).hex
+
+all: $(HEX)
+
+program: $(HEX)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $< -c -o $@
 
-$(TARGET).obj: leds.o motor.o main.o onewire.o ibutton.o
+$(ELF): $(OBJS)
 	$(CC) $(CFLAGS) $? -o $@
 
-%.hex: %.obj
+%.hex: %.elf
 	$(OBJ2HEX) -R .eeprom -O ihex $< $@
 
 clean:
-	rm -f *.hex *.obj *.o
+	rm -f $(OBJS)
+	rm -f $(ELF)
+	rm -f $(HEX)
