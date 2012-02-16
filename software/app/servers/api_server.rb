@@ -125,43 +125,50 @@ module Gatekeeper
 
 		def do_action(user, action, dID, arg = nil, &block)
 			raise ArgumentError.new('Invalid user') unless user
-			if can_user_do?(user, action, dID)
-				callback = Proc.new do |result|
-					p "====CALLBACK==="
-					p result
-					p user
-					p action
-					p dID
-					p arg
+			begin
+				if can_user_do?(user, action, dID)
+					callback = Proc.new do |result|
+						p "====CALLBACK==="
+						p result
+						p user
+						p action
+						p dID
+						p arg
 
-					if result[:response]
-						@states[dID] = result[:response]
-						notify_state_changed
-						p @states
+						if result[:response]
+							@states[dID] = result[:response]
+							notify_state_changed
+							p @states
+						end
+
+						type = result[:error_type] || :success
+						log_action(user, type, action, dID, arg)
+						yield result if block_given?
 					end
 
-					type = result[:error_type] || :success
-					log_action(user, type, action, dID, arg)
-					yield result if block_given?
+					case action
+						when :pop
+							@hardware.pop(dID, callback)
+						when :unlock
+							@hardware.unlock(dID, callback)
+						when :lock
+							@hardware.lock(dID, callback)
+						when :add_ibutton
+							@hardware.add_to_al(dID, arg, callback)
+						when :remove_ibutton
+							@hardware.remove_from_al(dID, arg, callback)
+					end
+				else
+					log_action(user, :denial, action, dID, arg)
+					yield({
+						:success => false,
+						:error => 'User is not allowed to perform specified action'
+					}) if block_given?
 				end
-
-				case action
-					when :pop
-						@hardware.pop(dID, callback)
-					when :unlock
-						@hardware.unlock(dID, callback)
-					when :lock
-						@hardware.lock(dID, callback)
-					when :add_ibutton
-						@hardware.add_to_al(dID, arg, callback)
-					when :remove_ibutton
-						@hardware.remove_from_al(dID, arg, callback)
-				end
-			else
-				log_action(user, :denial, action, dID, arg)
+			rescue MySql2::Error
 				yield({
 					:success => false,
-					:error => 'User is not allowed to perform specified action'
+					:error => 'Connection to database failed'
 				}) if block_given?
 			end
 		end
@@ -190,18 +197,6 @@ module Gatekeeper
 				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
 			end
 			User.new(info.merge({:id => id}))
-		end
-
-
-		# Translate the door address into the door id
-
-		def did_for_daddr(door_addr)
-			door_id = @db.fetch(:id, FETCH_DID_FOR_DOOR_ADDR, door_addr)
-			unless door_id
-				puts "Invalid door address received through C_IBUTTON"
-				return nil
-			end
-			door_id
 		end
 
 
@@ -235,12 +230,16 @@ module Gatekeeper
 		# Logs the action by the user to the database
 
 		def log_action(user, type, action, dID, arg = nil)
-			arg ||= ''
-			type_id = get_id_or_create(:types, type)
-			action_id = get_id_or_create(:actions, action)
-			service_id = get_id_or_create(:services, self.class.to_s.downcase)
+			begin
+				arg ||= ''
+				type_id = get_id_or_create(:types, type)
+				action_id = get_id_or_create(:actions, action)
+				service_id = get_id_or_create(:services, self.class.to_s.downcase)
 
-			@db.query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
+				@db.query(LOG_EVENT, user.id, type_id, action_id, dID, arg, service_id)
+			rescue MySql2::Error
+				puts "Log failed due to failed database connection (#{user}, #{type}, #{action}, #{dID}, #{arg})"
+			end
 		end
 
 		# Fetches the id of the value from the specified table.

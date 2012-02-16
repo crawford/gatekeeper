@@ -25,11 +25,15 @@ module Gatekeeper
 		def post_init
 			port, ip = Socket.unpack_sockaddr_in(get_peername)
 
-			door = @db.query(FETCH_ETHERNET_DOOR, ip).first
-			unless door
-				puts "Unknown device connected from #{ip}"
-				close_connection
-				return
+			begin
+				door = @db.query(FETCH_ETHERNET_DOOR, ip).first
+				unless door
+					puts "Unknown device connected from #{ip}"
+					close_connection
+					return
+				end
+			rescue MySql2::Error
+				puts "Connection to database failed"
 			end
 
 			ApiServer.instance.register_ethernet(door[:dAddr], self)

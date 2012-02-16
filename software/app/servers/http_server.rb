@@ -16,6 +16,11 @@ module Gatekeeper
 		                   :error      => 'Invalid command',
 		                   :response   => nil
 		                  }.freeze
+		BAD_DB_CONN = {:success    => false,
+		               :error_type => :login,
+		               :error      => 'Invalid username or password',
+		               :response   => nil
+		              }.freeze
 
 		def initialize(config)
 			@parser = Http::Parser.new
@@ -47,26 +52,38 @@ module Gatekeeper
 
 		def parse_request(uri, post)
 			uri = uri[1..-1].split('/')
-			user = auth_from_post(post)
+			begin
+				user = auth_from_post(post)
+				error = INVALID_CREDS
+			rescue MySql2::Error
+				error = BAD_DB_CONN
+			end
 
 			case uri[0]
 				when 'all_doors'
 					# /all_doors
-					send_data(ApiServer.instance.fetch_all_doors.to_json)
+					begin
+						send_data(ApiServer.instance.fetch_all_doors.to_json)
+					rescue MySql2::Error
+						send_data('Connection to database failed')
+					end
 					close_connection_after_writing
 				when 'door_state'
 					# /door_state/(door id)
 					id = uri[1].to_i
-					doors = ApiServer.instance.fetch_all_doors
-					res = 'Invalid or missing ID'
-					doors.each do |door|
-						if door[:id] == id
-							res = door
-							break
+					begin
+						doors = ApiServer.instance.fetch_all_doors
+						res = 'Invalid or missing ID'
+						doors.each do |door|
+							if door[:id] == id
+								res = door
+								break
+							end
 						end
+						send_data(res.to_json)
+					rescue MySql2::Error
+						send_data('Connection to database failed')
 					end
-
-					send_data(res.to_json)
 					close_connection_after_writing
 				when 'unlock'
 					# /unlock/(door id)
@@ -79,7 +96,7 @@ module Gatekeeper
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS.to_json)
+						send_data(error.to_json)
 						close_connection_after_writing
 					end
 				when 'lock'
@@ -93,7 +110,7 @@ module Gatekeeper
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS.to_json)
+						send_data(error.to_json)
 						close_connection_after_writing
 					end
 				when 'pop'
@@ -107,7 +124,7 @@ module Gatekeeper
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS.to_json)
+						send_data(error.to_json)
 						close_connection_after_writing
 					end
 				when 'set_code'

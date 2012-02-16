@@ -93,8 +93,12 @@ module Gatekeeper
 					p info
 					return unless info
 
-					user = @api_server.create_user_by_info(info)
-					@api_server.do_action(user, :pop, sender)
+					begin
+						user = @api_server.create_user_by_info(info)
+						@api_server.do_action(user, :pop, sender)
+					rescue MySql2::Error
+						puts "Failed to connect to database"
+					end
 				when C_ERROR
 					puts "An error occured on door #{sender} (#{payload.dump})"
 				else
@@ -150,7 +154,11 @@ module Gatekeeper
 				values = users.collect do |user|
 					"(#{user.uuid}, #{dID})"
 				end
-				@db.query(INSERT_INTO_ACCESS_LIST, values.join(','))
+				begin
+					@db.query(INSERT_INTO_ACCESS_LIST, values.join(','))
+				rescue MySql2::Error
+					puts 'Connection to database failed'
+				end
 			end
 
 			fiber.callback = callback
@@ -169,7 +177,11 @@ module Gatekeeper
 
 			fiber = MessageProcess.new do
 				# The list was cleared, so add our new iButtons
-				@db.query(CLEAR_ACCESS_LIST, dID)
+				begin
+					@db.query(CLEAR_ACCESS_LIST, dID)
+				rescue MySql2::Error
+					puts 'Connection to database failed'
+				end
 
 				unless iButtons.empty?
 					send_and_register(Fiber.current, dID, C_ADD, iButtons.join(','))
@@ -179,7 +191,11 @@ module Gatekeeper
 					values = existing.collect do |user|
 						"('#{user.uuid}', '#{dID}')"
 					end
-					@db.query(INSERT_INTO_ACCESS_LIST, values.join(','))
+					begin
+						@db.query(INSERT_INTO_ACCESS_LIST, values.join(','))
+					rescue MySql2::Error
+						puts 'Connection to database failed'
+					end
 				end
 			end
 
@@ -201,7 +217,13 @@ module Gatekeeper
 		def send_and_register(fiber, dID, command, payload = '')
 			key = "#{dID},#{@msgid.to_s}"
 
-			interface, address = get_interface_for_dID(dID)
+			begin
+				interface, address = get_interface_for_dID(dID)
+			rescue MySql2::Error
+				puts 'Connection to database failed'
+				fiber.fail
+			end
+
 			if interface
 				begin
 					send_message(interface, address, command, payload)

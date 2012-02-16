@@ -29,9 +29,14 @@ module Gatekeeper
 
 			case command
 				when 'AUTH'
-					@user = ApiServer.instance.authenticate_user(payload)
-					unless @user
-						send({:result => false, :error => "Invalid user key", :id => id}.to_json)
+					begin
+						@user = ApiServer.instance.authenticate_user(payload)
+						unless @user
+							send({:result => false, :error => "Invalid user key", :id => id}.to_json)
+							return
+						end
+					rescue MySql2::Error
+						send({:result => false, :error => "Connection to database failed", :id => id}.to_json)
 						return
 					end
 
@@ -64,18 +69,22 @@ module Gatekeeper
 		end
 
 		def send_states
-			doors = ApiServer.instance.fetch_all_doors
+			begin
+				doors = ApiServer.instance.fetch_all_doors
 
-			pop    = ApiServer::USER_ACTIONS.include?(:pop)    || (ApiServer::ADMIN_ACTIONS.include?(:pop)    && @user.admin)
-			unlock = ApiServer::USER_ACTIONS.include?(:unlock) || (ApiServer::ADMIN_ACTIONS.include?(:unlock) && @user.admin)
-			lock   = ApiServer::USER_ACTIONS.include?(:lock)   || (ApiServer::ADMIN_ACTIONS.include?(:lock)   && @user.admin)
+				pop    = ApiServer::USER_ACTIONS.include?(:pop)    || (ApiServer::ADMIN_ACTIONS.include?(:pop)    && @user.admin)
+				unlock = ApiServer::USER_ACTIONS.include?(:unlock) || (ApiServer::ADMIN_ACTIONS.include?(:unlock) && @user.admin)
+				lock   = ApiServer::USER_ACTIONS.include?(:lock)   || (ApiServer::ADMIN_ACTIONS.include?(:lock)   && @user.admin)
 
-			doors.each do |door|
-				door[:pop]    = pop
-				door[:unlock] = unlock
-				door[:lock]   = lock
+				doors.each do |door|
+					door[:pop]    = pop
+					door[:unlock] = unlock
+					door[:lock]   = lock
+				end
+				send({:error => nil, :states => doors}.to_json)
+			rescue MySql2::Error
+				send({:error => 'Connection to database failed', :states => []}.to_json)
 			end
-			send({:states => doors}.to_json)
 		end
 	end
 end
