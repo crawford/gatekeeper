@@ -160,8 +160,10 @@ module Gatekeeper
 			else
 				log_action(user, :denial, action, dID, arg)
 				yield({
-					:success => false,
-					:error => 'User is not allowed to perform specified action'
+					:success    => false,
+					:error      => 'User is not allowed to perform specified action',
+					:error_type => :denial,
+					:response   => nil
 				}) if block_given?
 			end
 		end

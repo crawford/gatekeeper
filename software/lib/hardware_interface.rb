@@ -26,17 +26,22 @@ module Gatekeeper
 			WHERE door_id = %d
 		'.freeze
 
-		C_QUERY = 'Q'.freeze
+		C_QUERY    = 'Q'.freeze
 		C_RESPONSE = 'R'.freeze
-		C_LOCK = 'L'.freeze
-		C_UNLOCK = 'U'.freeze
-		C_POP = 'P'.freeze
-		C_CLEAR = 'C'.freeze
-		C_ADD = 'A'.freeze
-		C_STATUS = 'S'.freeze
-		C_IBUTTON = 'I'.freeze
-		C_ERROR = 'E'.freeze
-		C_DOOR = 'D'.freeze
+		C_LOCK     = 'L'.freeze
+		C_UNLOCK   = 'U'.freeze
+		C_POP      = 'P'.freeze
+		C_CLEAR    = 'C'.freeze
+		C_ADD      = 'A'.freeze
+		C_STATUS   = 'S'.freeze
+		C_IBUTTON  = 'I'.freeze
+		C_ERROR    = 'E'.freeze
+		C_DOOR     = 'D'.freeze
+
+		ERROR_USER_DENIED      = 2
+		ERROR_INVALID_IBUTTON  = 3
+		ERROR_INTERNAL_FAILURE = 4
+		ERROR_UNKNOWN          = 5
 
 
 		def initialize(api_server)
@@ -59,7 +64,7 @@ module Gatekeeper
 			@zigbee.receive_callback = method(:process_message)
 		end
 
-		def process_message(data, sender)
+		def process_message(data, dID)
 			cmd = data[0]
 			msgid = data.getbyte(1)
 			payload = data[2..-1]
@@ -78,7 +83,7 @@ module Gatekeeper
 
 			case cmd
 				when C_RESPONSE
-					key = "#{sender},#{msgid.to_s}"
+					key = "#{dID},#{msgid.to_s}"
 					if @fibers.has_key?(key)
 						@fibers.delete(key).resume(payload)
 					else
@@ -92,14 +97,24 @@ module Gatekeeper
 
 						info = @ldap.info_for_ibutton(ibutton)
 						p info
-						return unless info
+						unless info
+							show_status(dID, ERROR_INVALID_IBUTTON)
+							return
+						end
 
 						user = @api_server.create_user_by_info(info)
-						@api_server.do_action(user, :pop, sender)
+						@api_server.do_action(user, :pop, dID) do |result|
+							case result[:error_type]
+								when :denial then show_status(dID, ERROR_USER_DENIED)
+								when nil
+								else              show_status(dID, ERROR_UNKNOWN)
+							end
+						end
 					rescue DBConnectionError
+						show_status(dID, ERROR_INTERNAL_FAILURE)
 					end
 				when C_ERROR
-					puts "An error occured on door #{sender} (#{payload.dump})"
+					puts "An error occured on door #{dID} (#{payload.dump})"
 				else
 					puts "Unexpected message (#{data.dump})"
 			end
