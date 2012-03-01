@@ -16,6 +16,16 @@ module Gatekeeper
 		                   :error      => 'Invalid command',
 		                   :response   => nil
 		                  }.freeze
+		INVALID_DOOR = {:success    => false,
+		                :error_type => :command,
+		                :error      => 'Invalid or missing ID',
+		                :response   => nil
+		               }.freeze
+		DOOR_STATE = {:success    => true,
+		              :error_type => nil,
+		              :error      => nil,
+		              :response   => nil
+		             }.freeze
 
 		def initialize(config)
 			@parser = Http::Parser.new
@@ -52,22 +62,22 @@ module Gatekeeper
 			case uri[0]
 				when 'all_doors'
 					# /all_doors
-					send_data(ApiServer.instance.fetch_all_doors.to_json)
+					send_data(DOOR_STATE.merge(:response => ApiServer.instance.fetch_all_doors).to_json)
 					close_connection_after_writing
 				when 'door_state'
 					# /door_state/(door id)
 					id = uri[1].to_i
 					doors = ApiServer.instance.fetch_all_doors
-					res = 'Invalid or missing ID'
 					doors.each do |door|
 						if door[:id] == id
-							res = door
+							send_data(DOOR_STATE.merge(:response => door).to_json)
+							close_connection_after_writing
 							break
 						end
 					end
-
-					send_data(res.to_json)
+					send_data(INVALID_DOOR)
 					close_connection_after_writing
+
 				when 'unlock'
 					# /unlock/(door id)
 					# POST username: (username)

@@ -38,7 +38,12 @@ module Gatekeeper
 		# Substitutes the args into the query and executes it.
 
 		def query(query, *args)
-			super(query % args)
+			begin
+				super(query % args)
+			rescue MySql2::Error
+				puts 'Could not connect to database'
+				raise DBConnectionError.new
+			end
 		end
 	end
 end

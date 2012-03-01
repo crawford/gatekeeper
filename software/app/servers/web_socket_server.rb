@@ -19,38 +19,42 @@ module Gatekeeper
 		end
 
 		def onmessage(msg)
-			command, payload, id = msg.split(':')
-			command.upcase!
+			begin
+				command, payload, id = msg.split(':')
+				command.upcase!
 
-			unless command and payload
-				send("Malformed instruction (Command:Payload[:Id])")
-				return
-			end
+				unless command and payload
+					send("Malformed instruction (Command:Payload[:Id])")
+					return
+				end
 
-			case command
-				when 'AUTH'
-					@user = ApiServer.instance.authenticate_user(payload)
-					unless @user
-						send({:result => false, :error => "Invalid user key", :id => id}.to_json)
-						return
-					end
+				case command
+					when 'AUTH'
+						@user = ApiServer.instance.authenticate_user(payload)
+						unless @user
+							send({:result => false, :error => "Invalid user key", :id => id}.to_json)
+							return
+						end
 
-					send({:result => true, :error => nil, :id => id}.to_json)
-					send_states
-				when 'POP'
-					ApiServer.instance.do_action(@user, :pop, payload.to_i) do |result|
-						send(result.merge({:id => id}).to_json)
-					end
-				when 'LOCK'
-					ApiServer.instance.do_action(@user, :lock, payload.to_i) do |result|
-						send(result.merge({:id => id}).to_json)
-					end
-				when 'UNLOCK'
-					ApiServer.instance.do_action(@user, :unlock, payload.to_i) do |result|
-						send(result.merge({:id => id}).to_json)
-					end
-				else
-					send({:success => false, :error => "Unrecognized command '#{command}'"}.to_json)
+						send({:result => true, :error => nil, :id => id}.to_json)
+						send_states
+					when 'POP'
+						ApiServer.instance.do_action(@user, :pop, payload.to_i) do |result|
+							send(result.merge({:id => id}).to_json)
+						end
+					when 'LOCK'
+						ApiServer.instance.do_action(@user, :lock, payload.to_i) do |result|
+							send(result.merge({:id => id}).to_json)
+						end
+					when 'UNLOCK'
+						ApiServer.instance.do_action(@user, :unlock, payload.to_i) do |result|
+							send(result.merge({:id => id}).to_json)
+						end
+					else
+						send({:success => false, :error => "Unrecognized command '#{command}'", :id => id}.to_json)
+				end
+			rescue DBConnectionError => e
+				send({:success => false, :error => e.to_s, :id => id}.to_json)
 			end
 		end
 
