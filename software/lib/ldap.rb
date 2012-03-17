@@ -19,8 +19,6 @@ module Gatekeeper
 			@@config = config.first unless config.empty?
 			fail 'LDAP must be configured' unless @@config
 
-			super(@@config)
-
 			@host     = @@config[:host]
 			@port     = @@config[:port]
 			username = @@config[:username]
@@ -76,7 +74,6 @@ module Gatekeeper
 		private
 
 		def perform_info_search(filter)
-			#TODO: Add admin
 			result = @ldap.search({
 				:base       => LDAP_USER_BASE,
 				:filter     => filter,
