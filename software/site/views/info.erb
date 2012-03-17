@@ -1,0 +1,71 @@
+<html>
+	<head>
+		<title>Gatekeeper</title>
+		<link rel="stylesheet" href="/css/admin.css" type="text/css">
+	</head>
+	<body>
+		<div class="section">
+			<div class="section-header">
+				<%= door %> Log
+			</div>
+			<div id="content">
+				<div id="log-table">
+					<table>
+						<th>Member</th>
+						<th>Result</th>
+						<th>Action</th>
+						<th>Time</th>
+						<% log.each do |entry| %>
+						<tr>
+							<td><%= entry[:name] %></td>
+							<td><%= entry[:type] %></td>
+							<td><%= entry[:action] %></td>
+							<td><%= entry[:datetime] %></td>
+						</tr>
+						<% end %>
+					</table>
+				</div>
+			</div>
+		</div>
+		<% if admin %>
+		<div class="section">
+			<div class="section-header">
+				Access Restrictions
+			</div>
+			<div class="section">
+				<div class="sub-section-header">
+					Current Restrictions
+				</div>
+				<table id="denial-table">
+					<th>User</th>
+					<th>Start Date</th>
+					<th>End Date</th>
+					<% rules.each do |entry| %>
+					<tr>
+						<td><%= entry[:name] %></td>
+						<td><%= entry[:startdate] %></td>
+						<td><%= entry[:enddate] %></td>
+					</tr>
+					<% end %>
+				</table>
+			</div>
+			<div class="section">
+				<div class="sub-section-header">
+					New Restriction
+				</div>
+				<form method="post">
+					<label for="username">Username:</label>
+					<input id="username" name="username" type="text" /><br />
+					<label for="time">Resriction Duration:</label>
+					<select id="time" name="time">
+						<option value="7">One Week</option>
+						<option value="14">Two Weeks</option>
+						<option value="21">Three Weeks</option>
+					</select><br />
+					<input type="submit" value="Add Rule" />
+				</form>
+			</div>
+		</div>
+		<% end %>
+	</body>
+</html>

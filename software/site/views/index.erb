@@ -143,9 +143,9 @@
 
             var socket;
             if (typeof WebSocket === 'undefined') {
-                socket = new MozWebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
+                socket = new MozWebSocket('<%= "wss://#{hostname}:#{wsport}" %>');
             } else {
-                socket = new WebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
+                socket = new WebSocket('<%= "wss://#{hostname}:#{wsport}" %>');
             }
             socket.onopen = function(data){
                 socket.send("AUTH:" + userkey);
@@ -199,7 +199,7 @@
                             door.addClass('unknown');
                         }
 
-                        door.append('<a class="door-name" href="log/' + states[i].id + '">' + states[i].name + '</a>');
+                        door.append('<a class="door-name" href="info/' + states[i].id + '">' + states[i].name + '</a>');
 
                         door.append('<div class="door-state">' + states[i].state + '</div>');
 
