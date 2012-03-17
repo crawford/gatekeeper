@@ -148,7 +148,7 @@ class Main < Sinatra::Base
 
 			erb :info, :locals => {:door => door_name, :log => log, :rules => rules, :admin => user[:admin]}
 		rescue => e
-			return e.to_s
+			return e.backtrace.join('<br />')
 		end
 	end
 
@@ -173,7 +173,7 @@ class Main < Sinatra::Base
 
 			redirect "/info/#{dID}", 303
 		rescue => e
-			return e.to_s
+			return e.backtrace.join('<br />')
 		end
 	end
 
