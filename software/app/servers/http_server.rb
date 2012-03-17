@@ -6,7 +6,26 @@ require 'api_server'
 
 module Gatekeeper
 	class HttpServer < EM::Connection
-		INVALID_CREDS = 'Invalid username or password'.freeze
+		INVALID_CREDS = {:success    => false,
+		                 :error_type => :login,
+		                 :error      => 'Invalid username or password',
+		                 :response   => nil
+		                }.freeze
+		INVALID_COMMAND = {:success    => false,
+		                   :error_type => :command,
+		                   :error      => 'Invalid command',
+		                   :response   => nil
+		                  }.freeze
+		INVALID_DOOR = {:success    => false,
+		                :error_type => :command,
+		                :error      => 'Invalid or missing ID',
+		                :response   => nil
+		               }.freeze
+		DOOR_STATE = {:success    => true,
+		              :error_type => nil,
+		              :error      => nil,
+		              :response   => nil
+		             }.freeze
 
 		def initialize(config)
 			@parser = Http::Parser.new
@@ -27,12 +46,12 @@ module Gatekeeper
 
 					parse_request(@parser.request_url, post)
 				rescue => e
-					send_data('Exception occured: ' << e.backtrace.to_s)
-					close_connection_after_writing
+					puts 'Exception occured: ' << e.backtrace.to_s
+					close_connection
 				end
 			else
-				send_data('Exception occured: ' << @last_error.to_s)
-				close_connection_after_writing
+				puts 'Exception occured: ' << @last_error.to_s
+				close_connection
 			end
 		end
 
@@ -43,22 +62,22 @@ module Gatekeeper
 			case uri[0]
 				when 'all_doors'
 					# /all_doors
-					send_data(ApiServer.instance.fetch_all_doors.to_json)
+					send_data(DOOR_STATE.merge(:response => ApiServer.instance.fetch_all_doors).to_json)
 					close_connection_after_writing
 				when 'door_state'
 					# /door_state/(door id)
 					id = uri[1].to_i
-					doors = ApiServer.instance.fetch_door_state(id)
-					res = 'Invalid or missing ID'
+					doors = ApiServer.instance.fetch_all_doors
 					doors.each do |door|
 						if door[:id] == id
-							res = door.to_json
+							send_data(DOOR_STATE.merge(:response => door).to_json)
+							close_connection_after_writing
 							break
 						end
 					end
-
-					send_data(res)
+					send_data(INVALID_DOOR)
 					close_connection_after_writing
+
 				when 'unlock'
 					# /unlock/(door id)
 					# POST username: (username)
@@ -66,11 +85,11 @@ module Gatekeeper
 					id = uri[1].to_i
 					if user
 						ApiServer.instance.do_action(user, :unlock, id) do |result|
-							send_data(result)
+							send_data(result.to_json)
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS)
+						send_data(INVALID_CREDS.to_json)
 						close_connection_after_writing
 					end
 				when 'lock'
@@ -80,11 +99,11 @@ module Gatekeeper
 					id = uri[1].to_i
 					if user
 						ApiServer.instance.do_action(user, :lock, id) do |result|
-							send_data(result)
+							send_data(result.to_json)
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS)
+						send_data(INVALID_CREDS.to_json)
 						close_connection_after_writing
 					end
 				when 'pop'
@@ -94,11 +113,11 @@ module Gatekeeper
 					id = uri[1].to_i
 					if user
 						ApiServer.instance.do_action(user, :pop, id) do |result|
-							send_data(result)
+							send_data(result.to_json)
 							close_connection_after_writing
 						end
 					else
-						send_data(INVALID_CREDS)
+						send_data(INVALID_CREDS.to_json)
 						close_connection_after_writing
 					end
 				when 'set_code'
@@ -109,7 +128,8 @@ module Gatekeeper
 
 				when 'favicon'
 				else
-					send_data('Invalid Command')
+					send_data(INVALID_COMMAND.to_json)
+					close_connection_after_writing
 			end
 		end
 

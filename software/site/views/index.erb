@@ -139,6 +139,7 @@
         $(document).ready(function(){
 
             var sent_actions = {};
+            var current_state;
 
             var socket;
             if (typeof WebSocket === 'undefined') {
@@ -174,7 +175,8 @@
                 data = JSON.parse(data.data);
 
                 if('states' in data){
-                    update_states(data.states);
+                    current_state = data.states;
+                    update_states(current_state);
                 }
 
                 if(data.id in sent_actions){
@@ -203,22 +205,21 @@
 
                         door.append('<div class="door-message"></div>');
 
-                        var pop = $('<input type="button" class="action-button" door_action="pop" door_id="' + states[i].id + '" value="Pop">'),
-                            unlock = $('<input type="button" class="action-button" door_action="unlock" door_id="' + states[i].id + '" value="Unlock">'),
-                            lock = $('<input type="button" class="action-button" door_action="lock" door_id="' + states[i].id + '" value="Lock">');
+                        var pop = $('<input type="button" class="action-button pop" door_action="pop" door_id="' + states[i].id + '" value="Pop">');
+                        var unlock = $('<input type="button" class="action-button unlock" door_action="unlock" door_id="' + states[i].id + '" value="Unlock">');
+                        var lock = $('<input type="button" class="action-button lock" door_action="lock" door_id="' + states[i].id + '" value="Lock">');
 
                         if(states[i].pop != true){
-                            pop.attr('disabled', true);
+                            pop.attr('disabled', 'disabled');
                         }
 
                         if(states[i].unlock != true){
-                            unlock.attr('disabled', true);
+                            unlock.attr('disabled', 'disabled');
                         }
 
                         if(states[i].lock != true){
-                            lock.attr('disabled', true);
+                            lock.attr('disabled', 'disabled');
                         }
-
 
                         var actions = $('<div class="actions">' + '</div>');
 
@@ -250,6 +251,28 @@
                             // something here...
                         }
 
+                        var pop    = $('.container > #' + states[i].id + ' > .actions > .pop');
+                        var unlock = $('.container > #' + states[i].id + ' > .actions > .unlock');
+                        var lock   = $('.container > #' + states[i].id + ' > .actions > .lock');
+
+
+                        if(states[i].pop != true){
+                            pop.attr('disabled', 'disabled');
+                        } else {
+                            pop.removeAttr('disabled');
+                        }
+
+                        if(states[i].unlock != true){
+                            unlock.attr('disabled', 'disabled');
+                        } else {
+                            unlock.removeAttr('disabled');
+                        }
+
+                        if(states[i].lock != true){
+                            lock.attr('disabled', 'disabled');
+                        } else {
+                            lock.removeAttr('disabled');
+                        }
                     }
                 }
             }
@@ -268,10 +291,10 @@
                         setTimeout(function(){
                             door.attr('class', 'door');
                             door.addClass('closed');
-                            $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
+                            update_states(current_state);
                         }, 2000);
                     } else {
-                        $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
+                        update_states(current_state);
 
                         door.find('.door-message').html(response.error);
 
@@ -300,7 +323,7 @@
                             door.find('.door-message').html('');
                         }, 2000);
                     }
-                    $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
+                    update_states(current_state);
                 }
 
 
@@ -322,7 +345,7 @@
                             door.find('.door-message').html('');
                         }, 2000);
                     }
-                    $('#' + element.attr('door_id') + ' .action-button').attr('disabled', false);
+                    update_states(current_state);
                 }
 
                 sent_actions[id] = {id: element.attr('door_id'), action: callback};

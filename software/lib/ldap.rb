@@ -1,10 +1,14 @@
 require 'net-ldap'
 require 'user'
 
-LDAP_USER_BASE = 'ou=Users,dc=csh,dc=rit,dc=edu'.freeze
+LDAP_USER_BASE   = 'ou=Users,dc=csh,dc=rit,dc=edu'.freeze
+LDAP_GROUPS_BASE = 'ou=Groups,dc=csh,dc=rit,dc=edu'.freeze
+LDAP_GROUP_CN    = 'keymaster'.freeze
 
 module Gatekeeper
 	class Ldap
+		include Net
+
 		@@config = nil
 
 		def self.config=(config)
@@ -20,7 +24,7 @@ module Gatekeeper
 			username = @@config[:username]
 			password = @@config[:password]
 
-			@ldap = Net::LDAP.new({
+			@ldap = LDAP.new({
 				:host => @host,
 				:port => @port,
 				:auth => {
@@ -38,22 +42,22 @@ module Gatekeeper
 		end
 
 		def info_for_ibutton(ibutton)
-			filter = Net::LDAP::Filter.eq('ibutton', ibutton)
+			filter = LDAP::Filter.eq('ibutton', ibutton)
 			perform_info_search(filter)
 		end
 
 		def info_for_username(username)
-			filter = Net::LDAP::Filter.eq('uid', username)
+			filter = LDAP::Filter.eq('uid', username)
 			perform_info_search(filter)
 		end
 
 		def info_for_uuid(uuid)
-			filter = Net::LDAP::Filter.eq('entryUUID', uuid)
+			filter = LDAP::Filter.eq('entryUUID', uuid)
 			perform_info_search(filter)
 		end
 
 		def validate_user_credentials(username, password)
-			conn = Net::LDAP.new({
+			conn = LDAP.new({
 				:host => @host,
 				:port => @port,
 				:auth => {
@@ -74,7 +78,7 @@ module Gatekeeper
 			result = @ldap.search({
 				:base       => LDAP_USER_BASE,
 				:filter     => filter,
-				:attributes => ['ibutton', 'entryUUID', 'cn'],
+				:attributes => ['ibutton', 'entryUUID', 'cn', 'dn'],
 				:size       => 1
 			}).first
 
@@ -83,8 +87,18 @@ module Gatekeeper
 			ibutton = result[:ibutton].first
 			uuid    = result[:entryUUID].first
 			cn     = result[:cn].first
+			dn     = result[:dn].first
 
-			{:ibutton => ibutton, :uuid => uuid, :name => cn}
+			result = @ldap.search({
+				:base       => LDAP_GROUPS_BASE,
+				:filter     => LDAP::Filter.join(LDAP::Filter.eq('objectClass', 'groupOfNames'), LDAP::Filter.eq('cn', LDAP_GROUP_CN)),
+				:attributes => ['member'],
+				:size       => 1
+			}).first
+
+			admin = result[:member].include?(dn)
+
+			{:ibutton => ibutton, :uuid => uuid, :name => cn, :admin => admin}
 		end
 	end
 end

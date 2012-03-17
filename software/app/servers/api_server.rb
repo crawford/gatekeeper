@@ -8,8 +8,8 @@ module Gatekeeper
 		include EM::Deferrable
 		include Singleton
 
-		USER_ACTIONS =  [:pop, :unlock, :lock].freeze
-		ADMIN_ACTIONS = [:add_rule, :remove_rule, :add_ibutton, :remove_ibutton].freeze
+		USER_ACTIONS =  [:pop, :lock].freeze
+		ADMIN_ACTIONS = [:unlock, :add_rule, :remove_rule, :add_ibutton, :remove_ibutton].freeze
 
 		FETCH_ALL_DOORS = '
 			SELECT doors.id, doors.name
@@ -160,8 +160,10 @@ module Gatekeeper
 			else
 				log_action(user, :denial, action, dID, arg)
 				yield({
-					:success => false,
-					:error => 'User is not allowed to perform specified action'
+					:success    => false,
+					:error      => 'User is not allowed to perform specified action',
+					:error_type => :denial,
+					:response   => nil
 				}) if block_given?
 			end
 		end
@@ -189,7 +191,7 @@ module Gatekeeper
 				@db.query(INSERT_VALUE, 'users', 'uuid', info[:uuid])
 				id = @db.fetch(:id, GET_ID_FROM_UUID, info[:uuid])
 			end
-			User.new(info.merge({:admin => false, :id => id}))
+			User.new(info.merge({:id => id}))
 		end
 
 
