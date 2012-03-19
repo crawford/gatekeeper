@@ -1,364 +1,110 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <style type="text/css">
-            body {
-                margin: 0px 0px 0px 0px;
-                padding: 0px 0px 0px 0px;
-                background: #cccccc;
-                font-family: Helvetica, Arial, sans-serif;
-                padding: 10px;
-            }
-
-            .header {
-                margin: 50px auto 0px auto;
-                padding: 10px 10px 10px 10px;
-                max-width: 960px;
-                min-width: 400px;
-                color: #434343;
-                background: #fff;
-                border-radius: 10px;
-                font-size: 2em;
-            }
-
-            .container {
-                margin: 10px auto 0px auto;
-                padding: 10px 10px 10px 10px;
-                max-width: 960px;
-                min-width: 400px;
-                background: #fff;
-                border-radius: 10px;
-            }
-
-                .container .door {
-                    margin: 0px 0px 0px 0px;
-                    padding: 10px 10px 10px 10px;
-                    border-radius: 10px;
-                    color: #434343;
-                    overflow: hidden;
-                }
-
-                    .container .door .door-name {
-                        margin: 0px 0px 0px 0px;
-                        padding: .3em 0em .3em 0em;
-                        position: relative;
-                        float: left;
-                        display: -moz-box;
-                        display: -webkit-box;
-                        text-decoration: none;
-                        color: #000000;
-                    }
-
-                    .container .door .door-message {
-                        margin: 7px 0px 0px 0px;
-                        padding: 0px 0px 0px 10px;
-                        position: relative;
-                        float: left;
-                        font-size: .8em;
-                        font-style: italic;
-                        color: #cc3333;
-                        font-weight: bold;
-                    }
-
-                    .container .door .door-state {
-                        margin: 4px 0px 0px 0px;
-                        padding: 0px 0px 0px 10px;
-                        position: relative;
-                        float: left;
-                        font-size: 1em;
-                        opacity: 0.3;
-                        color: #333333;
-                        font-weight: bold;
-                    }
-
-                    .container .door .actions {
-                        margin: 0px 0px 0px 0px;
-                        padding: 0px 0px 0px 0px;
-                        position: relative;
-                        float: right;
-                    }
-
-                        .container .door .actions .action-button {
-                            margin: 0px 0px 0px 0px;
-                            padding: 5px 15px 5px 15px;
-                            background: #DDDDDD;
-                            border: 1px solid #a0a0a0;
-                            position: relative;
-                            float: right;
-                            border-radius: 5px;
-                            font-size: .8em;
-                            color: #434343;
-                        }
-
-                            .container .door .actions .action-button[disabled="disabled"] {
-                                background: #eeeeee;
-                                color: #cccccc;
-                                border: 1px solid #bbbbbb;
-                            }
-
-                            .container .door .actions .action-button:hover {
-                                background: #C0C0C0;
-                                cursor: pointer;
-                            }
-
-
-                            .container .door .actions .action-button[disabled="disabled"] {
-                                background: #eeeeee;
-                                color: #cccccc;
-                            }
-
-                            .container .door .actions .action-button:not(:last-of-type){
-                                margin-left: 10px;
-                            }
-
-                .container .door:not(:first-of-type){
-                    margin-top: 10px;
-                }
-
-                .closed {
-                    background: #80C080;
-                }
-
-                .open {
-                    background: #FF8080;
-                }
-
-                .unknown {
-                    background: #DDDDDD;
-                }
-
-                .popping {
-                    background: #FFD280;
-                }
-
-
-        </style>
         <title>Gatekeeper</title>
+        <!--<link href="/css/style.css">-->
+        <link href="css/style.css" type="text/css" rel="stylesheet">
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+        <script type="text/javascript" src="js/connection.js"></script>
+        <script type="text/javascript" src="js/rest.js"></script>
+        <script type="text/javascript" src="js/websocket.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
         <script type="text/javascript">
-        $(document).ready(function(){
 
-            var sent_actions = {};
-            var current_state;
+        var sent_actions = {},
+            current_stat;
 
-            var socket;
-            if (typeof WebSocket === 'undefined') {
-                socket = new MozWebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
-            } else {
-                socket = new WebSocket('<%= "ws://#{hostname}:#{wsport}" %>');
-            }
-            socket.onopen = function(data){
-                socket.send("AUTH:" + userkey);
-            }
+        function update_states(states){
+            if($('.door').length == 0){
+                for(var i = 0; i < states.length; i++){
+                    var door = $('<div class="door" id="' + states[i].id + '"></div>');
 
-            function handle_action_button(elem){
-
-                switch(elem.attr('door_action')){
-                    case 'pop':
-                        pop_door(elem);
-                        break;
-
-                    case 'unlock':
-                        unlock_door(elem);
-                        break;
-
-                    case 'lock': 
-                        lock_door(elem);
-                        break;
-                }
-
-                var buttons = $('#' + elem.attr('door_id') + ' .action-button');
-                $('#' + elem.attr('door_id') + ' .action-button').attr('disabled', true);
-            }
-
-            socket.onmessage = function(data){
-                data = JSON.parse(data.data);
-
-                if('states' in data){
-                    current_state = data.states;
-                    update_states(current_state);
-                }
-
-                if(data.id in sent_actions){
-                    sent_actions[data.id].action(data);
-                }
-
-            }
-
-            function update_states(states){
-
-                if($('.door').length == 0){
-                    for(var i = 0; i < states.length; i++){
-                        var door = $('<div class="door" id="' + states[i].id + '"></div>');
-
-                        if(states[i].state == 'unlocked'){
-                            door.addClass('open');
-                        } else if(states[i].state == 'locked'){
-                            door.addClass('closed');
-                        } else {
-                            door.addClass('unknown');
-                        }
-
-                        door.append('<a class="door-name" href="log/' + states[i].id + '">' + states[i].name + '</a>');
-
-                        door.append('<div class="door-state">' + states[i].state + '</div>');
-
-                        door.append('<div class="door-message"></div>');
-
-                        var pop = $('<input type="button" class="action-button pop" door_action="pop" door_id="' + states[i].id + '" value="Pop">');
-                        var unlock = $('<input type="button" class="action-button unlock" door_action="unlock" door_id="' + states[i].id + '" value="Unlock">');
-                        var lock = $('<input type="button" class="action-button lock" door_action="lock" door_id="' + states[i].id + '" value="Lock">');
-
-                        if(states[i].pop != true){
-                            pop.attr('disabled', 'disabled');
-                        }
-
-                        if(states[i].unlock != true){
-                            unlock.attr('disabled', 'disabled');
-                        }
-
-                        if(states[i].lock != true){
-                            lock.attr('disabled', 'disabled');
-                        }
-
-                        var actions = $('<div class="actions">' + '</div>');
-
-                        actions.append(pop);
-                        actions.append(unlock);
-                        actions.append(lock);
-
-                        door.append(actions)
-
-
-                        $('#door_container').append(door);
-                    }
-
-                } else {
-                    for(var i = 0; i < states.length; i++){
-                        var door = $('#' + states[i].id);
-                        var door_state = $('#' + states[i].id + " > .door-state");
-
-                        door.attr('class', 'door');
-                        door_state.html(states[i].state);
-
-                        if(states[i].state == 'unlocked'){
-                            door.addClass('open');
-                        } else if(states[i].state == 'locked'){
-                            door.addClass('closed');
-                        } else if(states[i].state == 'unknown'){
-                            door.addClass('unknown');
-                        } else {
-                            // something here...
-                        }
-
-                        var pop    = $('.container > #' + states[i].id + ' > .actions > .pop');
-                        var unlock = $('.container > #' + states[i].id + ' > .actions > .unlock');
-                        var lock   = $('.container > #' + states[i].id + ' > .actions > .lock');
-
-
-                        if(states[i].pop != true){
-                            pop.attr('disabled', 'disabled');
-                        } else {
-                            pop.removeAttr('disabled');
-                        }
-
-                        if(states[i].unlock != true){
-                            unlock.attr('disabled', 'disabled');
-                        } else {
-                            unlock.removeAttr('disabled');
-                        }
-
-                        if(states[i].lock != true){
-                            lock.attr('disabled', 'disabled');
-                        } else {
-                            lock.removeAttr('disabled');
-                        }
-                    }
-                }
-            }
-
-            function pop_door(element){
-                var id = (new Date()).getTime();
-
-                var callback = function(response){
-                    var data = sent_actions[response.id];
-                    var door = $('#' + data.id);
-
-                    if(response.success == true){
-                        door.attr('class', 'door');
+                    if(states[i].state == 'unlocked'){
                         door.addClass('open');
-
-                        setTimeout(function(){
-                            door.attr('class', 'door');
-                            door.addClass('closed');
-                            update_states(current_state);
-                        }, 2000);
+                    } else if(states[i].state == 'locked'){
+                        door.addClass('closed');
                     } else {
-                        update_states(current_state);
-
-                        door.find('.door-message').html(response.error);
-
-                        setTimeout(function(){
-                            door.find('.door-message').html('');
-                        }, 2000);
+                        door.addClass('unknown');
                     }
 
-                }
+                    door.append('<a class="door-name" href="log/' + states[i].id + '">' + states[i].name + '</a>');
 
+                    door.append('<div class="door-state">' + states[i].state + '</div>');
 
-                sent_actions[id] = {id: element.attr('door_id'), action: callback};
+                    door.append('<div class="door-message"></div>');
 
-                socket.send("POP:" + element.attr('door_id') + ':' + id);
-            }
+                    var pop = $('<input type="button" class="action-button pop" door_action="pop" door_id="' + states[i].id + '" value="Pop">');
+                    var unlock = $('<input type="button" class="action-button unlock" door_action="unlock" door_id="' + states[i].id + '" value="Unlock">');
+                    var lock = $('<input type="button" class="action-button lock" door_action="lock" door_id="' + states[i].id + '" value="Lock">');
 
-            function unlock_door(element){
-                var id = (new Date()).getTime();
-                var callback = function(response){
-                    var data = sent_actions[response.id];
-                    var door = $('#' + data.id);
-                    if(response.error != null){
-                        door.find('.door-message').html(response.error);
-
-                        setTimeout(function(){
-                            door.find('.door-message').html('');
-                        }, 2000);
+                    if(states[i].pop != true){
+                        pop.attr('disabled', 'disabled');
                     }
-                    update_states(current_state);
-                }
 
-
-                sent_actions[id] = {id: element.attr('door_id'), action: callback};
-
-                socket.send("UNLOCK:" + element.attr('door_id') + ':' + id);
-            }
-
-            function lock_door(element){
-                var id = (new Date()).getTime();
-                var callback = function(response){
-                    var data = sent_actions[response.id];
-                    var door = $('#' + data.id);
-
-                    if(response.error != null){
-                        door.find('.door-message').html(response.error);
-
-                        setTimeout(function(){
-                            door.find('.door-message').html('');
-                        }, 2000);
+                    if(states[i].unlock != true){
+                        unlock.attr('disabled', 'disabled');
                     }
-                    update_states(current_state);
+
+                    if(states[i].lock != true){
+                        lock.attr('disabled', 'disabled');
+                    }
+
+                    var actions = $('<div class="actions">' + '</div>');
+
+                    actions.append(pop);
+                    actions.append(unlock);
+                    actions.append(lock);
+
+                    door.append(actions)
+
+
+                    $('#door_container').append(door);
                 }
 
-                sent_actions[id] = {id: element.attr('door_id'), action: callback};
+            } else {
+                for(var i = 0; i < states.length; i++){
+                    var door = $('#' + states[i].id);
+                    var door_state = $('#' + states[i].id + " > .door-state");
 
-                socket.send("LOCK:" + element.attr('door_id') + ':' + id);
+                    door.attr('class', 'door');
+                    door_state.html(states[i].state);
+
+                    if(states[i].state == 'unlocked'){
+                        door.addClass('open');
+                    } else if(states[i].state == 'locked'){
+                        door.addClass('closed');
+                    } else if(states[i].state == 'unknown'){
+                        door.addClass('unknown');
+                    } else {
+                        // something here...
+                    }
+
+                    var pop    = $('.container > #' + states[i].id + ' > .actions > .pop');
+                    var unlock = $('.container > #' + states[i].id + ' > .actions > .unlock');
+                    var lock   = $('.container > #' + states[i].id + ' > .actions > .lock');
+
+
+                    if(states[i].pop != true){
+                        pop.attr('disabled', 'disabled');
+                    } else {
+                        pop.removeAttr('disabled');
+                    }
+
+                    if(states[i].unlock != true){
+                        unlock.attr('disabled', 'disabled');
+                    } else {
+                        unlock.removeAttr('disabled');
+                    }
+
+                    if(states[i].lock != true){
+                        lock.attr('disabled', 'disabled');
+                    } else {
+                        lock.removeAttr('disabled');
+                    }
+                }
             }
+        }
 
-            $('.action-button').live('click', function(event){
-                handle_action_button($(this));
-            });
-
-
-        });
         var userkey = '<%= key %>';
         </script>
     </head>

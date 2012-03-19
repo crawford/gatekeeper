@@ -1,0 +1,129 @@
+
+body {
+    margin: 0px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+    background: #cccccc;
+    font-family: Helvetica, Arial, sans-serif;
+    padding: 10px;
+}
+
+.header {
+    margin: 50px auto 0px auto;
+    padding: 10px 10px 10px 10px;
+    max-width: 960px;
+    min-width: 400px;
+    color: #434343;
+    background: #fff;
+    border-radius: 10px;
+    font-size: 2em;
+}
+
+.container {
+    margin: 10px auto 0px auto;
+    padding: 10px 10px 10px 10px;
+    max-width: 960px;
+    min-width: 400px;
+    background: #fff;
+    border-radius: 10px;
+}
+
+    .container .door {
+        margin: 0px 0px 0px 0px;
+        padding: 10px 10px 10px 10px;
+        border-radius: 10px;
+        color: #434343;
+        overflow: hidden;
+    }
+
+        .container .door .door-name {
+            margin: 0px 0px 0px 0px;
+            padding: .3em 0em .3em 0em;
+            position: relative;
+            float: left;
+            display: -moz-box;
+            display: -webkit-box;
+            text-decoration: none;
+            color: #000000;
+        }
+
+        .container .door .door-message {
+            margin: 7px 0px 0px 0px;
+            padding: 0px 0px 0px 10px;
+            position: relative;
+            float: left;
+            font-size: .8em;
+            font-style: italic;
+            color: #cc3333;
+            font-weight: bold;
+        }
+
+        .container .door .door-state {
+            margin: 4px 0px 0px 0px;
+            padding: 0px 0px 0px 10px;
+            position: relative;
+            float: left;
+            font-size: 1em;
+            opacity: 0.3;
+            color: #333333;
+            font-weight: bold;
+        }
+
+        .container .door .actions {
+            margin: 0px 0px 0px 0px;
+            padding: 0px 0px 0px 0px;
+            position: relative;
+            float: right;
+        }
+
+            .container .door .actions .action-button {
+                margin: 0px 0px 0px 0px;
+                padding: 5px 15px 5px 15px;
+                background: #DDDDDD;
+                border: 1px solid #a0a0a0;
+                position: relative;
+                float: right;
+                border-radius: 5px;
+                font-size: .8em;
+                color: #434343;
+            }
+
+                .container .door .actions .action-button[disabled="disabled"] {
+                    background: #eeeeee;
+                    color: #cccccc;
+                    border: 1px solid #bbbbbb;
+                }
+
+                .container .door .actions .action-button:hover {
+                    background: #C0C0C0;
+                    cursor: pointer;
+                }
+
+
+                .container .door .actions .action-button[disabled="disabled"] {
+                    background: #eeeeee;
+                    color: #cccccc;
+                }
+
+                .container .door .actions .action-button:not(:last-of-type){
+                    margin-left: 10px;
+                }
+
+    .container .door:not(:first-of-type){
+        margin-top: 10px;
+    }
+
+    .closed {
+        background: #80C080;
+    }
+
+    .open {
+        background: #FF8080;
+    }
+
+    .unknown {
+        background: #DDDDDD;
+    }
+
+    .popping {
+        background: #FFD280;
+    }
