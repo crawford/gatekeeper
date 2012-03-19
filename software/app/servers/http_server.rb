@@ -62,12 +62,12 @@ module Gatekeeper
 			case uri[0]
 				when 'all_doors'
 					# /all_doors
-					send_data(DOOR_STATE.merge(:response => ApiServer.instance.fetch_all_doors).to_json)
+					send_data(DOOR_STATE.merge(:response => ApiServer.instance.fetch_all_doors(user)).to_json)
 					close_connection_after_writing
 				when 'door_state'
 					# /door_state/(door id)
 					id = uri[1].to_i
-					doors = ApiServer.instance.fetch_all_doors
+					doors = ApiServer.instance.fetch_all_doors(user)
 					doors.each do |door|
 						if door[:id] == id
 							send_data(DOOR_STATE.merge(:response => door).to_json)

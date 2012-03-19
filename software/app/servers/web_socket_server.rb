@@ -24,7 +24,7 @@ module Gatekeeper
 				command.upcase!
 
 				unless command and payload
-					send("Malformed instruction (Command:Payload[:Id])")
+					send({:success => false, :error => "Malformed instruction (Command:Payload[:Id])"}.to_json)
 					return
 				end
 
@@ -33,6 +33,7 @@ module Gatekeeper
 						@user = ApiServer.instance.authenticate_user(payload)
 						unless @user
 							send({:result => false, :error => "Invalid user key", :id => id}.to_json)
+							close_connection_after_writing
 							return
 						end
 
@@ -68,17 +69,8 @@ module Gatekeeper
 		end
 
 		def send_states
-			doors = ApiServer.instance.fetch_all_doors
-
-			pop    = ApiServer::USER_ACTIONS.include?(:pop)    || (ApiServer::ADMIN_ACTIONS.include?(:pop)    && @user.admin)
-			unlock = ApiServer::USER_ACTIONS.include?(:unlock) || (ApiServer::ADMIN_ACTIONS.include?(:unlock) && @user.admin)
-			lock   = ApiServer::USER_ACTIONS.include?(:lock)   || (ApiServer::ADMIN_ACTIONS.include?(:lock)   && @user.admin)
-
-			doors.each do |door|
-				door[:pop]    = pop
-				door[:unlock] = unlock
-				door[:lock]   = lock
-			end
+			return unless @user
+			doors = ApiServer.instance.fetch_all_doors(@user)
 			send({:states => doors}.to_json)
 		end
 	end
