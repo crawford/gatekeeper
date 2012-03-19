@@ -30,15 +30,34 @@ rest.prototype.pop = function(elem){
         id = (new Date()).getTime(),
         door_id = $(elem).attr('door_id');
 
-    $.ajax({
-        url: self.paths.pop + '/' + door_id,
-        dataType: 'json',
-        type: 'POST',
-        success: function(data){
-            self.handle_post_pop(data, {id: door_id});
-        },
-        data: {userkey: userkey}
-    });
+
+    if(window.XDomainRequest){
+
+        var req = new XDomainRequest();
+
+        if(req){
+            req.onload = function(){
+                var data = JSON.parse(req.responseText);
+
+                self.handle_post_pop(data, {id: door_id});
+            };
+
+            req.open('post', self.paths.pop + '/' + door_id);
+            req.send("userkey=" + userkey);
+
+        }
+
+    } else {
+        $.ajax({
+            url: self.paths.pop + '/' + door_id,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data){
+                self.handle_post_pop(data, {id: door_id});
+            },
+            data: {userkey: userkey}
+        });
+    }
 };
 
 rest.prototype.lock = function(elem){
@@ -46,17 +65,37 @@ rest.prototype.lock = function(elem){
             id = (new Date()).getTime(),
             door_id = $(elem).attr('door_id');
 
-    $.ajax({
-        url: self.paths.lock + '/' + door_id,
-        dataType: 'json',
-        type: 'POST',
-        success: function(data){
-            self.handle_post_lock(data, {id: door_id}, function(){
-                update_states(self.current_state);
-            });
-        },
-        data: {userkey: userkey}
-    });
+    if(window.XDomainRequest){
+
+        var req = new XDomainRequest();
+
+        if(req){
+            req.onload = function(){
+                var data = JSON.parse(req.responseText);
+
+                self.handle_post_lock(data, {id: door_id}, function(){
+                    update_states(self.current_state);
+                });
+            };
+
+            req.open('post', self.paths.lock + '/' + door_id);
+            req.send("userkey=" + userkey);
+
+        }
+
+    } else {
+        $.ajax({
+            url: self.paths.lock + '/' + door_id,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data){
+                self.handle_post_lock(data, {id: door_id}, function(){
+                    update_states(self.current_state);
+                });
+            },
+            data: {userkey: userkey}
+        });
+    }
 };
 
 rest.prototype.unlock = function(elem){
@@ -64,29 +103,69 @@ rest.prototype.unlock = function(elem){
             id = (new Date()).getTime(),
             door_id = $(elem).attr('door_id');
 
-    $.ajax({
-        url: self.paths.unlock + '/' + door_id,
-        dataType: 'json',
-        type: 'POST',
-        success: function(data){
-            self.handle_post_unlock(data, {id: door_id}, function(){
-                update_states(self.current_state);
-            });
-        },
-        data: {userkey: userkey}
-    });
+    if(window.XDomainRequest){
+        var req = new XDomainRequest();
+
+        if(req){
+            req.onload = function(){
+                var data = JSON.parse(req.responseText);
+
+                self.handle_post_unlock(data, {id: door_id}, function(){
+                    update_states(self.current_state);
+                });
+            };
+
+            req.open('post', self.paths.unlock + '/' + door_id);
+            req.send("userkey=" + userkey);
+
+        }
+
+    } else {
+
+        $.ajax({
+            url: self.paths.unlock + '/' + door_id,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data){
+                self.handle_post_unlock(data, {id: door_id}, function(){
+                    update_states(self.current_state);
+                });
+            },
+            data: {userkey: userkey}
+        });
+    }
 };
 
 rest.prototype.get_states = function(){
     var self = this;
-    $.ajax({
-        url: self.paths.all_doors,
-        dataType: 'json',
-        type: 'POST',
-        success: function(data){
-            self.current_state = data.response;
-            update_states(self.current_state);
-        },
-        data: {userkey: userkey}
-    });
+
+    if(window.XDomainRequest){
+        var req = new XDomainRequest();
+
+        if(req){
+            req.onload = function(){
+                var data = JSON.parse(req.responseText);
+                self.current_state = data.response;
+                update_states(self.current_state);
+            };
+
+            req.open('post', self.paths.all_doors);
+            req.send("userkey=" + userkey);
+
+        }
+
+    } else {
+        $.ajax({
+            url: self.paths.all_doors,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data){
+                self.current_state = data.response;
+                update_states(self.current_state);
+            },
+            data: {userkey: userkey}
+        });
+    }
+
+
 };
