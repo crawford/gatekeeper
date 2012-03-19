@@ -9,7 +9,6 @@ var conn;
 $(document).ready(function(){
 
     conn = new websocket(userkey);
-    //console.log(conn);
 
     if(conn.connection_error == true){
         //console.log('false');
