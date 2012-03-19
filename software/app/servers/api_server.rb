@@ -82,9 +82,12 @@ module Gatekeeper
 		#  - Door ID
 		#  - Door State
 
-		def fetch_all_doors
+		def fetch_all_doors(user)
 			@db.query(FETCH_ALL_DOORS).collect do |door|
-				door[:state] = @states[door[:id]] || :unknown
+				door[:state]  = @states[door[:id]] || :unknown
+				door[:pop]    = USER_ACTIONS.include?(:pop)    || (ApiServer::ADMIN_ACTIONS.include?(:pop)    && user.admin)
+				door[:unlock] = USER_ACTIONS.include?(:unlock) || (ApiServer::ADMIN_ACTIONS.include?(:unlock) && user.admin)
+				door[:lock]   = USER_ACTIONS.include?(:lock)   || (ApiServer::ADMIN_ACTIONS.include?(:lock)   && user.admin)
 				door
 			end
 		end
