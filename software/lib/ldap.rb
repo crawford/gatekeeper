@@ -19,8 +19,6 @@ module Gatekeeper
 			@@config = config.first unless config.empty?
 			fail 'LDAP must be configured' unless @@config
 
-			super(@@config)
-
 			@host     = @@config[:host]
 			@port     = @@config[:port]
 			username = @@config[:username]
