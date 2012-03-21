@@ -1,0 +1,27 @@
+form {
+	margin: 0px;
+}
+
+.section {
+	border: 1px #AAAAFF solid;
+	border-radius: 10px;
+	padding: 15px;
+	margin: 10px 0px;
+
+}
+
+.section-header {
+	font-size: 1.5em;
+	margin: -10px 0px 10px -10px;
+}
+
+.sub-section-header {
+	font-size: 1.25em;
+	margin: -10px 0px 10px -10px;
+}
+
+#denial-table {
+}
+
+#log-table {
+}

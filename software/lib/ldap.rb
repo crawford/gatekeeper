@@ -74,7 +74,6 @@ module Gatekeeper
 		private
 
 		def perform_info_search(filter)
-			#TODO: Add admin
 			result = @ldap.search({
 				:base       => LDAP_USER_BASE,
 				:filter     => filter,
