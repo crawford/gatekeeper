@@ -73,7 +73,7 @@ websocket.prototype.pop = function(element){
    self.socket.send("POP:" + element.attr('door_id') + ':' + id);
 };
 
-websocket.prototype.lock = function(){
+websocket.prototype.lock = function(element){
    var self = this,
        id = (new Date()).getTime();
 
@@ -88,7 +88,7 @@ websocket.prototype.lock = function(){
    self.socket.send("LOCK:" + element.attr('door_id') + ':' + id);
 };
 
-websocket.prototype.unlock = function(){
+websocket.prototype.unlock = function(element){
    var self = this,
        id = (new Date()).getTime();
 
