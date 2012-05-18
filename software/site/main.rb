@@ -7,6 +7,9 @@ require 'socket'
 require 'yaml'
 require 'redis'
 require 'uuid'
+require 'erubis'
+
+set :erubis, :escape_html => true
 
 add_to_loadpath("../lib", "../models")
 
@@ -94,7 +97,7 @@ class Main < Sinatra::Base
 		@redis.expire(login, KEY_EXPIRE_TIME)
 		@redis.expire(key, KEY_EXPIRE_TIME)
 
-		erb :index, :locals => {:hostname => hostname, :wsport => wsport, :key => key}
+		erubis :index, :locals => {:hostname => hostname, :wsport => wsport, :key => key}
 	end
 
 	get '/info/:door' do
@@ -146,7 +149,7 @@ class Main < Sinatra::Base
 
 			user  = ldap.info_for_username(login)
 
-			erb :info, :locals => {:door => door_name, :log => log, :rules => rules, :admin => user[:admin]}
+			erubis :info, :locals => {:door => door_name, :log => log, :rules => rules, :admin => user[:admin]}
 		rescue => e
 			return e.backtrace.join('<br />')
 		end

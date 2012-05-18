@@ -13,6 +13,7 @@ gem "em-websocket"
 gem "sinatra"
 gem "net-ldap"
 gem "uuid"
+gem "erubis"
 
 #Temporary
 gem "shotgun"
