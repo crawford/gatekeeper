@@ -42,7 +42,7 @@ module Gatekeeper
 				super(query % args)
 			rescue MySql2::Error
 				puts 'Could not connect to database'
-				raise DBConnectionError.new
+				raise Gatekeeper::DBConnectionError.new
 			end
 		end
 	end
