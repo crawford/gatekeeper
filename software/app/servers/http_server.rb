@@ -36,7 +36,7 @@ module Gatekeeper
 			unless @last_error
 				begin
 					offset = @parser << data
-					post = data[offset..-1].split(',')
+					post = data[offset..-1].split('&')
 
 					post = post.inject({}) do |hash, data|
 						args = data.strip.split('=')
@@ -46,7 +46,7 @@ module Gatekeeper
 
 					parse_request(@parser.request_url, post)
 				rescue => e
-					puts 'Exception occured: ' << e.backtrace.to_s
+					puts 'Exception occured: ' << e.to_s
 					close_connection
 				end
 			else
@@ -58,6 +58,11 @@ module Gatekeeper
 		def parse_request(uri, post)
 			uri = uri[1..-1].split('/')
 			user = auth_from_post(post)
+
+			# Allow cross domain requests
+			send_data("HTTP/1.1 200 OK\r\n")
+			send_data("Content-Type:application/json\r\n")
+			send_data("Access-Control-Allow-Origin:*\r\n\r\n")
 
 			case uri[0]
 				when 'all_doors'
