@@ -54,7 +54,7 @@ module Gatekeeper
 					else
 						send({:success => false, :error => "Unrecognized command '#{command}'", :id => id}.to_json)
 				end
-			rescue Gatekeeper::DBConnectionError => e
+			rescue DBConnectionError => e
 				send({:success => false, :error => e.to_s, :id => id}.to_json)
 			end
 		end

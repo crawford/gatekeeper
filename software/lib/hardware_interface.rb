@@ -110,7 +110,7 @@ module Gatekeeper
 								else              show_status(dID, ERROR_UNKNOWN)
 							end
 						end
-					rescue Gatekeeper::DBConnectionError
+					rescue DBConnectionError
 						show_status(dID, ERROR_INTERNAL_FAILURE)
 					end
 				when C_ERROR

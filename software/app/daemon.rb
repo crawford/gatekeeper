@@ -17,6 +17,7 @@ require 'web_socket_server'
 require 'hardware_interface'
 require 'ethernet_interface'
 require 'db'
+require 'exceptions'
 
 def main
 	servers   = keys_to_symbols(YAML.load_file('config/servers.yml')).freeze
