@@ -40,7 +40,7 @@ module Gatekeeper
 
 					post = post.inject({}) do |hash, data|
 						args = data.strip.split('=')
-						hash[args[0].to_sym] = args[1]
+						hash[args[0].to_sym] = args[1] if args
 						hash
 					end
 
