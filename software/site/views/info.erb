@@ -17,7 +17,7 @@
 						<th>Time</th>
 						<% log.each do |entry| %>
 						<tr>
-							<td><%= entry[:name] %></td>
+							<td><%= escape_html entry[:name] %></td>
 							<td><%= entry[:type] %></td>
 							<td><%= entry[:action] %></td>
 							<td><%= entry[:datetime] %></td>
@@ -42,7 +42,7 @@
 					<th>End Date</th>
 					<% rules.each do |entry| %>
 					<tr>
-						<td><%= entry[:name] %></td>
+						<td><%= escape_html entry[:name] %></td>
 						<td><%= entry[:startdate] %></td>
 						<td><%= entry[:enddate] %></td>
 					</tr>
