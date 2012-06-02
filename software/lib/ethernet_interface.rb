@@ -23,24 +23,29 @@ module Gatekeeper
 		end
 
 		def post_init
-			port, ip = Socket.unpack_sockaddr_in(get_peername)
+			begin
+				port, ip = Socket.unpack_sockaddr_in(get_peername)
 
-			door = @db.query(FETCH_ETHERNET_DOOR, ip).first
-			unless door
-				puts "Unknown device connected from #{ip}"
+				door = @db.query(FETCH_ETHERNET_DOOR, ip).first
+				unless door
+					puts "Unknown device connected from #{ip}"
+					close_connection
+					return
+				end
+
+				ApiServer.instance.register_ethernet(door[:dAddr], self)
+
+				@door = door
+				puts "'#{door[:name]}' device connected"
+
+				num = door[:dAddr].to_i.chr
+				send_data("D\001#{num}\n")
+
+				ApiServer.instance.query_door_state(door[:dID])
+			rescue Exception => e
+				p e.backtrace
 				close_connection
-				return
 			end
-
-			ApiServer.instance.register_ethernet(door[:dAddr], self)
-
-			@door = door
-			puts "'#{door[:name]}' device connected"
-
-			num = door[:dAddr].to_i.chr
-			send_data("D\001#{num}\n")
-
-			ApiServer.instance.query_door_state(door[:dID])
 		end
 
 		def receive_data(data)

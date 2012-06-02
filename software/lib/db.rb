@@ -40,7 +40,7 @@ module Gatekeeper
 		def query(query, *args)
 			begin
 				super(query % args)
-			rescue MySql2::Error
+			rescue ::Mysql2::Error
 				puts 'Could not connect to database'
 				raise DBConnectionError.new
 			end
