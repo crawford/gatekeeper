@@ -10,7 +10,7 @@ module Gatekeeper
 		include Net
 
 		@@config = nil
-		EXCEPTIONS = [OpenSSL::SSL::SSLError, Net::LDAP::LdapError]
+		EXCEPTIONS = [OpenSSL::SSL::SSLError, Net::LDAP::LdapError,Errno::ETIMEDOUT ]
 
 		def self.config=(config)
 			@@config = config
@@ -88,9 +88,8 @@ module Gatekeeper
 					:size       => 1
 				}).first
 			rescue *EXCEPTIONS
-				sleep(5)
-				puts('perform info search failed, sleeping and trying again.')
-				retry
+				puts('perform info search failed')
+				return nil
 			end
 
 			return nil unless result
