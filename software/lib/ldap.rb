@@ -79,7 +79,6 @@ module Gatekeeper
 
 		private
 			
-		EXCEPTIONS = [OpenSSL::SSL::SSLError, Net::LDAP::LdapError]
 		def perform_info_search(filter)
 			begin
 				result = @ldap.search({
